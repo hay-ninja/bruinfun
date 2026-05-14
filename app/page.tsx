@@ -1,7 +1,5 @@
+import DemoPage from "@/components/demo/demo-page";
+
 export default function Home() {
-  return (
-    <main>
-      <h1>BruinFun</h1>
-    </main>
-  );
+  return <DemoPage />;
 }
