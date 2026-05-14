@@ -4,13 +4,15 @@ A community-driven web platform where UCLA students discover and share fun activ
 
 ## Tech Stack
 
-- **Framework:** Next.js (App Router)
-- **Styling:** TailwindCSS + shadcn/ui
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** TailwindCSS v4 + shadcn/ui
 - **Database:** Supabase (PostgreSQL)
-- **ORM:** Prisma
 - **Auth:** Supabase Auth
 - **Photos:** Cloudinary
 - **Hosting:** Vercel
+
+---
 
 ## Getting Started
 
@@ -22,56 +24,110 @@ A community-driven web platform where UCLA students discover and share fun activ
 
 1. Clone the repo:
 ```bash
-   git clone https://github.com/your-org/bruinfun.git
-   cd bruinfun
+git clone https://github.com/your-org/bruinfun.git
+cd bruinfun
 ```
 
 2. Install dependencies:
 ```bash
-   npm install
+npm install
 ```
 
-3. Copy the env file:
+3. Create your local env file:
 ```bash
-   cp .env.example .env.local
+cp .env.example .env
 ```
-   Fill in the values from Supabase and Cloudinary.
+Open `.env` and fill in the values — ask a teammate for the Supabase URL/key and Cloudinary cloud name.
 
-4. Run Prisma migrations:
+4. Start the dev server:
 ```bash
-   npx prisma migrate dev
-```
-
-5. Start dev server:
-```bash
-   npm run dev
+npm run dev
 ```
 
 Visit `http://localhost:3000`.
 
-## Development Workflow
+> **Note:** Never commit `.env.local`. It's gitignored. Your real keys stay local only.
 
-1. Branch off `main`:
-```bash
-   git checkout main
-   git pull
-   git checkout -b feature/US1-signup
+---
+
+## Project Structure
+
+```
+app/                  # Next.js App Router pages and layouts
+  layout.tsx          # Root layout (html, body, global styles)
+  page.tsx            # Homepage — currently renders DemoPage
+  globals.css         # Tailwind import + shadcn CSS variables
+
+components/
+  ui/                 # shadcn components (auto-populated via CLI)
+
+lib/
+  supabase.ts         # Supabase client (reads from .env.local)
+  utils.ts            # cn() helper for merging Tailwind classes
 ```
 
-2. Commit using Conventional Commits:
-   - `feat:` new feature
-   - `fix:` bug fix
-   - `docs:` documentation only
-   - `refactor:` code changes that don't change behavior
-   - `chore:` tooling, dependencies
+---
 
-3. Push and open a PR. Wait for at least 1 approval before merging.
+## Branch Conventions
 
-## Team (not set)
+Always branch off `main`. Pull first so you're up to date.
 
-- Person 1 — Authentication
-- Person 2 — Activity Posting & Database
-- Person 3 — Feed, Search, Map
-- Person 4 — Activity Details, Ratings, Comments
-- Person 5 — Bookmarks, Profile, Polish
-EOF
+```bash
+git checkout main
+git pull
+git checkout -b <type>/<short-description>
+```
+
+### Branch types
+
+| Type | When to use | Example |
+|---|---|---|
+| `feat/` | New feature or page | `feat/activity-card` |
+| `fix/` | Bug fix | `fix/search-bar-overflow` |
+| `chore/` | Config, deps, tooling | `chore/update-supabase` |
+| `refactor/` | Restructuring without behavior change | `refactor/demo-cleanup` |
+| `docs/` | README or comment updates | `docs/setup-instructions` |
+
+### Commit messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add activity card component
+fix: sidebar nav active state not updating
+chore: add cloudinary env var to example
+refactor: move demo components into /demo folder
+docs: update setup steps in README
+```
+
+### Pull Requests
+
+- Open a PR against `main`
+- At least **1 approval** before merging
+- Delete the branch after merge
+
+---
+
+## Adding shadcn Components
+
+```bash
+npx shadcn add <component>
+# examples:
+npx shadcn add button
+npx shadcn add dialog
+npx shadcn add input card
+```
+
+Components land in `components/ui/` as your own code — edit them freely.
+
+---
+
+## Team
+
+| Person | Area |
+|---|---|
+| ryder | Authentication |
+| haydn | Database, http functions, cloundinary api, Activity Log |
+| kai| DESIGN, Home page => Feed, Search, Map |
+| TBD | Activity Details, Ratings, Comments |
+| TBD | Bookmarks, Profile, Polish |
