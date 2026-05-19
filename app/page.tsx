@@ -1,5 +1,3 @@
-import DemoPage from "@/components/demo/demo-page";
-
 export default function Home() {
-  return <DemoPage/>;
+  return <header> hello </header>;
 }
