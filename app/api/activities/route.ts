@@ -41,3 +41,39 @@ export async function POST(req: NextRequest) {
     // return succesful object!
     return NextResponse.json(data, { status: 201 })
 }
+
+export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url)
+
+    const category = searchParams.get('category')
+    const sort = searchParams.get('sort')
+    const cursor = searchParams.get('cursor') // not pages, cursor = ID of last loaded activity to support infinite scrolling like pinterest :D
+
+    let query = supabase
+    .from('activities')
+    .select('*')
+    .order('created_at', {ascending: false})
+    .limit(25)
+
+    if (category) {
+        query = query.eq('category', category)
+    }
+
+    if (sort === 'rating') {
+        query = query.order('avg_rating', {ascending: false})
+    }
+    if (cursor) {
+        query = query.lt('id', cursor)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+        return NextResponse.json({ error: error.message }, {status: 500})
+    }
+
+    return NextResponse.json({
+        data,
+        nextCursor: data.length === 25 ? data[data.length - 1].id : null
+    })
+}
