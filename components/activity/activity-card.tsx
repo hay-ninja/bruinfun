@@ -43,7 +43,7 @@ export default function ActivityCard({
       </div>
 
       {/* Content section */}
-      <div className="flex flex-col gap-0 pt-[10px] pb-4 px-[17px]">
+      <div className="flex flex-col gap-[-2px] pt-[10px] pb-4 px-[17px]">
         {/* Row 1 & 2: title + rating + location (extra div for spacing purposes) */}
         <div className="flex flex-col gap-0 pt-[10px] pb-4">
             <div className="flex items-center justify-between gap-2">
@@ -66,7 +66,7 @@ export default function ActivityCard({
 
         {/* Row 3: attendee count + tag pills */}
         {(attendeeCount !== undefined || tags.length > 0) && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {attendeeCount !== undefined && (
               <div className="flex items-center gap-[3px] text-[#a0a3a8]">
                 <Users size={13} />
@@ -74,7 +74,7 @@ export default function ActivityCard({
               </div>
             )}
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.25">
             {tags.map((tag) => (
               <span
                 key={tag}
