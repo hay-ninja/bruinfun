@@ -17,7 +17,7 @@ export default function ActivityCard({
   location,
   imageUrl,
   category = "Place",
-  attendeeCount,
+  attendeeCount = 0,
   tags = [],
   isBookmarked = false,
 }: ActivityCardProps) {
@@ -38,30 +38,30 @@ export default function ActivityCard({
 
         {/* Bookmark */}
         <div className="absolute top-[22px] right-[22px] drop-shadow-[0px_1.71px_1.71px_rgba(0,0,0,0.1)]">
-          <Bookmark size={17} className="text-white" fill={isBookmarked ? "white" : "none"} />
+          <Bookmark size={24} className="text-white" fill={isBookmarked ? "white" : "rgba(0,0,0,0.2)"} />
         </div>
       </div>
 
       {/* Content section */}
-      <div className="flex flex-col gap-2 pt-[10px] pb-4 px-[17px]">
+      <div className="flex flex-col gap-0 pt-[10px] pb-4 px-[17px]">
+        {/* Row 1 & 2: title + rating + location (extra div for spacing purposes) */}
+        <div className="flex flex-col gap-0 pt-[10px] pb-4">
+            <div className="flex items-center justify-between gap-2">
+            <span className="text-[18px] font-semibold text-[#191c20] overflow-hidden text-ellipsis whitespace-nowrap leading-[1.49]">
+                {title}
+            </span>
+            <div className="flex items-center gap-1 shrink-0">
+                <span className="text-[18px] font-semibold text-[#000]">{rating}</span>
+                <span className="text-[18px] text-[#f0ac19]">★</span>
+            </div>
+            </div>
 
-        {/* Row 1: title + rating */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[18px] font-semibold text-[#191c20] overflow-hidden text-ellipsis whitespace-nowrap leading-[1.49]">
-            {title}
-          </span>
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[18px] font-semibold text-[#10a053]">{rating}</span>
-            <span className="text-[15px] text-[#f0ac19]">★</span>
-          </div>
-        </div>
-
-        {/* Row 2: location */}
-        <div className="flex items-center gap-[3px] h-[26px]">
-          <MapPin size={13.5} className="text-[#a0a3a8] shrink-0" />
-          <span className="text-[15px] text-[#a0a3a8] overflow-hidden text-ellipsis whitespace-nowrap">
-            {location}
-          </span>
+            <div className="flex items-center gap-[3px] h-[26px]">
+            <MapPin size={13} className="text-[#a0a3a8] shrink-0" />
+            <span className="text-[15px] text-[#a0a3a8] overflow-hidden text-ellipsis whitespace-nowrap">
+                {location}
+            </span>
+            </div>
         </div>
 
         {/* Row 3: attendee count + tag pills */}
@@ -73,14 +73,17 @@ export default function ActivityCard({
                 <span className="text-[16px]">{attendeeCount}</span>
               </div>
             )}
+
+            <div className="flex items-center gap-1.5">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="text-[14px] font-semibold text-[#323232] bg-white/80 border border-white px-[10.8px] py-[5.4px] rounded-full"
+                className="text-[14px] font-semibold text-[#323232] bg-white/80 border border-[rgba(192,199,209,0.6)] px-[10.8px] py-[5.4px] rounded-full"
               >
                 {tag}
               </span>
             ))}
+            </div>
           </div>
         )}
 
