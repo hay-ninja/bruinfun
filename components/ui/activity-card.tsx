@@ -1,6 +1,6 @@
 import { MapPin, Bookmark, Users } from "lucide-react";
 
-interface ActivityCardProps {
+type ActivityCardProps = {
   title: string;
   rating: number;
   location: string;
