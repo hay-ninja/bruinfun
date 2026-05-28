@@ -27,18 +27,10 @@ type RatingResponse = {
 const categories = ["sports", "food", "arts", "nightlife", "outdoors"];
 
 async function uploadToCloudinary(file: File) {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-  if (!cloudName || !uploadPreset) {
-    throw new Error("Cloudinary upload is not configured.");
-  }
-
   const data = new FormData();
   data.append("file", file);
-  data.append("upload_preset", uploadPreset);
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+  const res = await fetch("/api/uploads", {
     method: "POST",
     body: data,
   });
