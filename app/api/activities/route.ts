@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const auth = await getRequestUser(req)
     const { user } = auth
     if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: 401 })
     }
 
     //parsing the body of request & validating
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         })
         .select()
         .single()
-    
+
     if (error){
         return NextResponse.json( { error: error.message }, { status: 500 })
     }
@@ -58,12 +58,13 @@ export async function GET(req: NextRequest) {
 
     const category = searchParams.get('category')
     const search = searchParams.get('search')
+    const sort = searchParams.get('sort')
     const cursor = searchParams.get('cursor') // not pages, cursor = ID of last loaded activity to support infinite scrolling like pinterest :D
 
     let query = supabase
     .from('activities')
     .select('*')
-    .order('created_at', {ascending: false})
+    .order(sort === 'rating' ? 'avg_rating' : 'created_at', {ascending: false})
     .limit(25)
 
     if (category) {

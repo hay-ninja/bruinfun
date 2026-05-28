@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Nunito } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const nunito = Nunito({ subsets: ['latin'], variable: '--font-nunito', weight: ['600'] });
 
 export const metadata: Metadata = {
   title: "BruinFun",
@@ -16,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
+    <html lang="en" className={cn("font-sans", inter.variable, nunito.variable)}>
       <body>{children}</body>
     </html>
   );
