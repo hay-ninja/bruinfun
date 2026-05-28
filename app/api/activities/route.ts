@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getRequestUser } from '@/lib/auth'
 
 const VALID_CATEGORIES = ['sports', 'food', 'arts', 'nightlife', 'outdoors']
 
 //create new activity func
 export async function POST(req: NextRequest) {
 
-    //checking auth 
-    const token = req.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const auth = await getRequestUser(req)
+    if (auth.user === null) {
+        return NextResponse.json({ error: auth.error }, { status: 401 })
     }
-
-    const { data: {user}, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { user } = auth
 
     //parsing the body of request & validating - only require title for creating activity
     const body = await req.json()
@@ -29,12 +25,12 @@ export async function POST(req: NextRequest) {
     }
 
     // insert into supabase
-    const { data, error } = await supabase
+    const { data, error } = await auth.db
         .from('activities')
         .insert({ title, category, image_url: image_url ?? null, user_id: user.id })
         .select()
         .single()
-    
+
     if (error){
         return NextResponse.json( { error: error.message }, { status: 500 })
     }
