@@ -1,6 +1,7 @@
 import Header from '@/components/Header'
 import ActivityRow from '@/components/activity/activity-row'
 import BrowseAll from '@/components/browse-all'
+import Footer from '@/components/Footer'
 import { TRENDING, OFF_CAMPUS, ON_CAMPUS } from '@/lib/mock-activities'
 
 // combine all activities for the browse all grid
@@ -17,6 +18,7 @@ export default function Home() {
         <ActivityRow title="On-Campus"   activities={ON_CAMPUS}  />
         <BrowseAll activities={ALL_ACTIVITIES} />
       </main>
+      <Footer />
     </div>
   )
 }
