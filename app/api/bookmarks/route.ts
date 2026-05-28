@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getRequestUser } from '@/lib/auth'
 
 // save an activity to bookmarks
 export async function POST(req: NextRequest) {
 
-    // check auth
-    const token = req.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await getRequestUser(req)
+    if (auth.user === null) {
+        return NextResponse.json({ error: auth.error }, { status: 401 })
     }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = auth
 
     const body = await req.json()
     const { activity_id } = body
@@ -22,7 +17,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'activity_id is required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await auth.db
         .from('bookmarks')
         .insert({ user_id: user.id, activity_id })
         .select()
@@ -42,16 +37,11 @@ export async function POST(req: NextRequest) {
 // remove a bookmark
 export async function DELETE(req: NextRequest) {
 
-    // check auth
-    const token = req.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await getRequestUser(req)
+    if (auth.user === null) {
+        return NextResponse.json({ error: auth.error }, { status: 401 })
     }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = auth
 
     const body = await req.json()
     const { activity_id } = body
@@ -61,7 +51,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // delete matching row for this user + activity
-    const { error } = await supabase
+    const { error } = await auth.db
         .from('bookmarks')
         .delete()
         .eq('user_id', user.id)
