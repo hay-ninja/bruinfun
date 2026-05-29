@@ -8,10 +8,10 @@ export async function GET(
 ) {
     const { username } = await params
 
-    // find the user by username first
+    // find the user by username — column is profile_id not id
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, first_name, last_name')
+        .select('profile_id, username, first_name, last_name')
         .eq('username', username)
         .single()
 
@@ -22,19 +22,19 @@ export async function GET(
     // their posted activities
     const { data: posted, error: postedError } = await supabase
         .from('activities')
-        .select('*')
-        .eq('user_id', profile.id)
+        .select('activity_id, title, category, image_url, location, created_at')
+        .eq('profile_id', profile.profile_id)
         .order('created_at', { ascending: false })
 
     if (postedError) {
         return NextResponse.json({ error: postedError.message }, { status: 500 })
     }
 
-    // their completed activities (ratings + activity details)
+    // their completed activities — no comment column in ratings table
     const { data: completed, error: completedError } = await supabase
         .from('ratings')
-        .select('rating, comment, created_at, activities(*)')
-        .eq('user_id', profile.id)
+        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location)')
+        .eq('profile_id', profile.profile_id)
         .order('created_at', { ascending: false })
 
     if (completedError) {
