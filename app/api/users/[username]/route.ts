@@ -41,5 +41,5 @@ export async function GET(
         return NextResponse.json({ error: completedError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ profile, posted, completed })
+    return NextResponse.json({ profile, posted, completed: completed ?? [] })
 }

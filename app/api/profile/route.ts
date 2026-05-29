@@ -32,26 +32,25 @@ export async function GET(req: NextRequest) {
     }
 
     // activities this user rated (completed), joined with activity details
+    // note: ratings table is being added by kai/kaveh — falls back to [] if not ready yet
     const { data: completed, error: completedError } = await db
         .from('ratings')
         .select('rating, comment, created_at, activities(*)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-    if (completedError) {
-        return NextResponse.json({ error: completedError.message }, { status: 500 })
-    }
-
     // bookmarked activities joined with activity details
+    // order by activity_id since created_at may not exist on bookmarks table
     const { data: bookmarks, error: bookmarksError } = await db
         .from('bookmarks')
         .select('activity_id, activities(*)')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .order('activity_id', { ascending: false })
 
     if (bookmarksError) {
         return NextResponse.json({ error: bookmarksError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ profile, posted, completed, bookmarks })
+    // return completed as [] if ratings table isn't ready yet (kaveh's branch)
+    return NextResponse.json({ profile, posted, completed: completed ?? [], bookmarks })
 }
