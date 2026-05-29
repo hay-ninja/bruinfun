@@ -9,18 +9,17 @@ import ActivityCard from '@/components/activity/activity-card'
 type Tab = 'posted' | 'completed' | 'bookmarks'
 
 type Activity = {
-    id: number
+    activity_id: number
     title: string
-    avg_rating: number
-    location: string
-    image_url: string
     category: string
+    image_url: string | null
+    location: string | null
 }
 
 type ProfileData = {
     profile: { username: string; first_name: string; last_name: string }
     posted: Activity[]
-    completed: { rating: number; comment: string | null; activities: Activity }[]
+    completed: { rating_id: number; rating: number; activities: Activity }[]
     bookmarks: { activity_id: number; activities: Activity }[]
 }
 
@@ -94,25 +93,24 @@ export default function ProfilePage() {
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
                     : <div className="flex flex-wrap gap-[20px]">
                         {posted.map((a) => (
-                            <ActivityCard key={a.id} title={a.title} rating={a.avg_rating ?? 0}
+                            <ActivityCard key={a.activity_id} title={a.title} rating={0}
                                 location={a.location ?? ''} category={a.category as any}
-                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.id}/400/300`} />
+                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`} />
                         ))}
                     </div>
                 )}
 
-                {/* completed - show rating + optional comment next to card */}
+                {/* completed - show rating next to card */}
                 {tab === 'completed' && (completed.length === 0
                     ? <p className="text-[#a0a3a8]">No completed activities yet.</p>
                     : <div className="flex flex-col gap-[16px]">
-                        {completed.map((entry, i) => (
-                            <div key={i} className="flex gap-[16px] items-start">
-                                <ActivityCard title={entry.activities.title} rating={entry.activities.avg_rating ?? 0}
+                        {completed.map((entry) => (
+                            <div key={entry.rating_id} className="flex gap-[16px] items-start">
+                                <ActivityCard title={entry.activities.title} rating={entry.rating}
                                     location={entry.activities.location ?? ''} category={entry.activities.category as any}
-                                    imageUrl={entry.activities.image_url ?? `https://picsum.photos/seed/${entry.activities.id}/400/300`} />
+                                    imageUrl={entry.activities.image_url ?? `https://picsum.photos/seed/${entry.activities.activity_id}/400/300`} />
                                 <div className="flex flex-col gap-[4px] pt-[8px]">
                                     <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
-                                    {entry.comment && <p className="text-[14px] text-[#a0a3a8] max-w-[300px]">{entry.comment}</p>}
                                 </div>
                             </div>
                         ))}
@@ -124,7 +122,7 @@ export default function ProfilePage() {
                     ? <p className="text-[#a0a3a8]">No bookmarks yet.</p>
                     : <div className="flex flex-wrap gap-[20px]">
                         {bookmarks.map((b) => (
-                            <ActivityCard key={b.activity_id} title={b.activities.title} rating={b.activities.avg_rating ?? 0}
+                            <ActivityCard key={b.activity_id} title={b.activities.title} rating={0}
                                 location={b.activities.location ?? ''} category={b.activities.category as any}
                                 imageUrl={b.activities.image_url ?? `https://picsum.photos/seed/${b.activity_id}/400/300`}
                                 isBookmarked={true} />
