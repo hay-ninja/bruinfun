@@ -3,9 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST, GET } from './route'
 import { NextRequest } from 'next/server'
 
+const { mockGetRequestUser } = vi.hoisted(() => ({
+  mockGetRequestUser: vi.fn(),
+}))
+
+vi.mock('@/lib/auth', () => ({
+  getRequestUser: mockGetRequestUser,
+}))
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
-    auth: { getUser: vi.fn() },
     from: vi.fn(),
   },
 }))
@@ -31,30 +38,36 @@ function makeGetRequest(params: Record<string, string> = {}) {
   return new NextRequest(url)
 }
 
+function makeAuthDb(fromImpl: ReturnType<typeof vi.fn>) {
+  return {
+    from: fromImpl,
+  }
+}
+
 beforeEach(() => vi.clearAllMocks())
 
 // ── TESITNG FOR POST ──────────────────────────────────────────────────────────────────────
 
 describe('POST /api/activities', () => {
   it('returns 401 when no token provided', async () => {
+    mockGetRequestUser.mockResolvedValue({ user: null, error: 'Unauthorized' })
     const res = await POST(makePostRequest({ title: 'Hike', category: 'outdoors' }))
     expect(res.status).toBe(401)
   })
 
   it('returns 401 when token is invalid', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: null },
-      error: new Error('invalid token'),
-    } as any)
+    mockGetRequestUser.mockResolvedValue({ user: null, error: 'Unauthorized' })
 
     const res = await POST(makePostRequest({ title: 'Hike', category: 'outdoors' }, 'bad-token'))
     expect(res.status).toBe(401)
   })
 
   it('returns 400 when title is missing', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser }, error: null,
-    } as any)
+    mockGetRequestUser.mockResolvedValue({
+      user: mockUser,
+      db: makeAuthDb(vi.fn()),
+      error: null,
+    })
 
     const res = await POST(makePostRequest({ category: 'outdoors' }, 'valid-token'))
     expect(res.status).toBe(400)
@@ -62,36 +75,41 @@ describe('POST /api/activities', () => {
   })
 
   it('returns 400 when category is invalid', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser }, error: null,
-    } as any)
+    mockGetRequestUser.mockResolvedValue({
+      user: mockUser,
+      db: makeAuthDb(vi.fn()),
+      error: null,
+    })
 
     const res = await POST(makePostRequest({ title: 'Hike', category: 'invalid' }, 'valid-token'))
     expect(res.status).toBe(400)
   })
 
   it('returns 400 when category is missing', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser }, error: null,
-    } as any)
+    mockGetRequestUser.mockResolvedValue({
+      user: mockUser,
+      db: makeAuthDb(vi.fn()),
+      error: null,
+    })
 
     const res = await POST(makePostRequest({ title: 'Hike' }, 'valid-token'))
     expect(res.status).toBe(400)
   })
 
   it('returns 201 with the created activity on success', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser }, error: null,
-    } as any)
-
-    const mockActivity = { id: 1, title: 'Hike', category: 'outdoors', user_id: mockUser.id }
-    vi.mocked(supabase.from).mockReturnValue({
+    const from = vi.fn().mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: mockActivity, error: null }),
+          single: vi.fn().mockResolvedValue({ data: { id: 1, title: 'Hike', category: 'outdoors', user_id: mockUser.id }, error: null }),
         }),
       }),
-    } as any)
+    })
+
+    mockGetRequestUser.mockResolvedValue({
+      user: mockUser,
+      db: makeAuthDb(from),
+      error: null,
+    })
 
     const res = await POST(makePostRequest({ title: 'Hike', category: 'outdoors' }, 'valid-token'))
     expect(res.status).toBe(201)
@@ -99,18 +117,19 @@ describe('POST /api/activities', () => {
   })
 
   it('returns 201 and stores null image_url when not provided', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser }, error: null,
-    } as any)
-
-    const mockActivity = { id: 2, title: 'Concert', category: 'arts', image_url: null, user_id: mockUser.id }
-    vi.mocked(supabase.from).mockReturnValue({
+    const from = vi.fn().mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: mockActivity, error: null }),
+          single: vi.fn().mockResolvedValue({ data: { id: 2, title: 'Concert', category: 'arts', image_url: null, user_id: mockUser.id }, error: null }),
         }),
       }),
-    } as any)
+    })
+
+    mockGetRequestUser.mockResolvedValue({
+      user: mockUser,
+      db: makeAuthDb(from),
+      error: null,
+    })
 
     const res = await POST(makePostRequest({ title: 'Concert', category: 'arts' }, 'valid-token'))
     expect(res.status).toBe(201)
@@ -118,17 +137,19 @@ describe('POST /api/activities', () => {
   })
 
   it('returns 500 when supabase insert fails', async () => {
-    vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: mockUser }, error: null,
-    } as any)
-
-    vi.mocked(supabase.from).mockReturnValue({
+    const from = vi.fn().mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({ data: null, error: { message: 'db error' } }),
         }),
       }),
-    } as any)
+    })
+
+    mockGetRequestUser.mockResolvedValue({
+      user: mockUser,
+      db: makeAuthDb(from),
+      error: null,
+    })
 
     const res = await POST(makePostRequest({ title: 'Hike', category: 'outdoors' }, 'valid-token'))
     expect(res.status).toBe(500)
