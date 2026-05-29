@@ -1,6 +1,7 @@
 'use client'
 
 import { Search, CircleUserRound } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Header() {
   return (
@@ -44,13 +45,13 @@ export default function Header() {
         <button className="bg-[#1f93cd] text-[#eaf4fa] text-[16px] font-medium px-[16px] py-[10px] rounded-full leading-none">
           Log Activity
         </button>
-        {/* profile icon */}
-        <button
+        {/* profile icon — links to own profile page */}
+        <Link href="/profile"
           aria-label="Profile"
           className="w-[40px] h-[40px] bg-[rgba(255,255,255,0.3)] rounded-full flex items-center justify-center"
         >
           <CircleUserRound size={20} className="text-[rgba(0,0,0,0.3)]" strokeWidth={1.5} />
-        </button>
+        </Link>
       </div>
     </header>
   )
