@@ -1,4 +1,4 @@
-// a single "row" of activites: eg. the trending / off-campus row 
+// a single "row" of activites: eg. the trending / off-campus row
 'use client'
 
 import { useRef, useState } from 'react'

@@ -37,7 +37,7 @@ npm install
 ```bash
 cp .env.example .env
 ```
-Open `.env` and fill in the values — ask a teammate for the Supabase URL/key and Cloudinary cloud name.
+Open `.env` and fill in the values — ask a teammate for the Supabase URL/key and Cloudinary cloud name, API key, and API secret.
 
 4. Start the dev server:
 ```bash
@@ -46,7 +46,7 @@ npm run dev
 
 Visit `http://localhost:3000`.
 
-> **Note:** Never commit `.env.local`. It's gitignored. Your real keys stay local only.
+> **Note:** Never commit `.env`. It's gitignored. Your real keys stay local only.
 
 ---
 
