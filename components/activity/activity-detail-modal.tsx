@@ -84,19 +84,19 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
               {activity.title}
             </h1>
 
-            {/* rating + category badge */}
-            <div className="flex items-center gap-[10px]">
-              <div className="flex items-center gap-[4px]">
-                <span className="text-[#edb721] text-[18px] leading-none">★</span>
-                <span className="text-[16px] font-medium text-black">{activity.rating}</span>
-              </div>
-              <div
-                className="flex items-center gap-[3.5px] text-white px-[9px] py-[4.5px] rounded-full shadow-[0px_1.68px_1.68px_0px_rgba(0,0,0,0.05)]"
+            {/* category badge */}
+            <div
+                className="flex w-[fit-content] items-center gap-[3.5px] text-white px-[9px] py-[4.5px] rounded-full shadow-[0px_1.68px_1.68px_0px_rgba(0,0,0,0.05)]"
                 style={{ backgroundColor: badgeColor }}
-              >
+            >
                 {badgeIcon}
                 <span className="text-[11.5px] font-semibold leading-none">{activity.category}</span>
-              </div>
+            </div>
+
+            {/* rating + category badge */}
+            <div className="flex items-center gap-[4px]">
+              <span className="text-[#edb721] text-[18px] leading-none">★</span>
+              <span className="text-[16px] font-medium text-black">{activity.rating}</span>
             </div>
 
             {/* location */}
