@@ -13,6 +13,7 @@ type ActivityCardProps = {
   tags?: string[]
   isBookmarked?: boolean
   className?: string
+  onClick?: () => void
 }
 
 // badge color per category, pulled directly from figma thx kai :D
@@ -43,13 +44,17 @@ export default function ActivityCard({
   tags = [],
   isBookmarked = false,
   className = '',
+  onClick,
 }: ActivityCardProps) {
   // grab the right color + icon for the badge
   const badgeColor = category ? CATEGORY_COLORS[category] : '#007aff'
   const badgeIcon  = category ? CATEGORY_ICONS[category]  : null
 
   return (
-    <div className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] ${className}`}>
+    <div
+      onClick={onClick}
+      className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] transition-shadow ${onClick ? 'cursor-pointer hover:shadow-[0px_4px_24px_-1px_rgba(0,0,0,0.25)]' : ''} ${className}`}
+    >
 
       {/* photo with badge + bookmark overlaid */}
       <div className="relative h-[163px] overflow-hidden">
