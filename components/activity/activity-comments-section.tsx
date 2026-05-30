@@ -19,11 +19,16 @@ type RatingResponse = {
   rating_id: number | string
 }
 
-function formatDate(value: string | null) {
+export function formatDate(value: string | null) {
   if (!value) return 'Recent'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Recent'
   return date.toLocaleDateString()
+}
+
+export function clampRatingValue(value: number): number {
+  if (Number.isNaN(value)) return 1
+  return Math.min(10, Math.max(1, value))
 }
 
 export default function ActivityCommentsSection({
@@ -112,7 +117,7 @@ export default function ActivityCommentsSection({
             min={1}
             max={10}
             value={rating}
-            onChange={(event) => setRating(Math.min(10, Math.max(1, Number(event.target.value) || 1)))}
+            onChange={(event) => setRating(clampRatingValue(Number(event.target.value) || 1))}
             className="w-20 rounded-md border border-[#d5dce3] px-2 py-1 text-[14px] text-[#191c20]"
           />
           <span className="text-[13px] text-[#6d7783]">1 to 10</span>
