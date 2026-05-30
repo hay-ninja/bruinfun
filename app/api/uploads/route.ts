@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getRequestUser } from "@/lib/auth";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_UPLOADS_PER_WINDOW = 10;
 
 type CloudinaryUploadResponse = {
   secure_url?: string;
@@ -16,6 +18,13 @@ type CloudinaryConfig = {
   apiKey: string;
   apiSecret: string;
 };
+
+type RateLimitWindow = {
+  count: number;
+  resetAt: number;
+};
+
+const uploadRateLimitStore = new Map<string, RateLimitWindow>();
 
 function signUploadParams(params: Record<string, string | number>, secret: string) {
   const payload = Object.entries(params)
@@ -40,10 +49,81 @@ function getCloudinaryConfig(): CloudinaryConfig | null {
   return { cloudName, apiKey, apiSecret };
 }
 
+function getClientIp(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp.trim();
+  }
+
+  return "unknown";
+}
+
+function checkUploadRateLimit(key: string): { limited: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+  const current = uploadRateLimitStore.get(key);
+
+  if (!current || now >= current.resetAt) {
+    uploadRateLimitStore.set(key, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+    });
+    return { limited: false, retryAfterSeconds: 0 };
+  }
+
+  if (current.count >= MAX_UPLOADS_PER_WINDOW) {
+    return {
+      limited: true,
+      retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+    };
+  }
+
+  current.count += 1;
+  uploadRateLimitStore.set(key, current);
+  return { limited: false, retryAfterSeconds: 0 };
+}
+
+function pruneExpiredRateLimitEntries(now: number) {
+  if (uploadRateLimitStore.size < 1000) {
+    return;
+  }
+
+  for (const [key, window] of uploadRateLimitStore.entries()) {
+    if (now >= window.resetAt) {
+      uploadRateLimitStore.delete(key);
+    }
+  }
+}
+
+export function __resetUploadRateLimitForTests() {
+  uploadRateLimitStore.clear();
+}
+
 export async function POST(req: Request) {
   const auth = await getRequestUser(req);
   if (!auth.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const clientIp = getClientIp(req);
+  const rateLimitKey = `${auth.user.id}:${clientIp}`;
+  const now = Date.now();
+  pruneExpiredRateLimitEntries(now);
+  const rateLimit = checkUploadRateLimit(rateLimitKey);
+  if (rateLimit.limited) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please try again soon." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      },
+    );
   }
 
   const cloudinary = getCloudinaryConfig();
