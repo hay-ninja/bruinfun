@@ -15,8 +15,8 @@ export default function Home() {
   const [logModalOpen, setLogModalOpen] = useState(false)
   const [initialLogQuery, setInitialLogQuery] = useState('')
 
-  function openLogModal(query = '') {
-    setInitialLogQuery(query.trim())
+  function openLogModal() {
+    setInitialLogQuery('')
     setLogModalOpen(true)
   }
 
