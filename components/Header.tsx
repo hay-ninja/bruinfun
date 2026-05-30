@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Search, CircleUserRound } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 type ActivitySearchResult = {
   activity_id: number | string
@@ -15,6 +16,7 @@ type HeaderProps = {
 }
 
 export default function Header({ onLogActivity }: HeaderProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -140,8 +142,9 @@ export default function Header({ onLogActivity }: HeaderProps) {
                     <button
                       type="button"
                       onClick={() => {
-                        setSearchQuery(activity.title)
+                        setSearchQuery('')
                         setShowDropdown(false)
+                        router.push(`/activities/${activity.activity_id}`)
                       }}
                       className="w-full px-4 py-2 text-left hover:bg-[#f4f8fb]"
                     >
