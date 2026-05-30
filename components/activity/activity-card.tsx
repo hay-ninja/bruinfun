@@ -52,9 +52,12 @@ export default function ActivityCard({
   // grab the right color + icon for the badge
   const badgeColor = category ? CATEGORY_COLORS[category] : '#007aff'
   const badgeIcon  = category ? CATEGORY_ICONS[category]  : null
+  const hoverClass = href
+    ? 'transition-transform duration-200 will-change-transform hover:-translate-y-[2px] hover:shadow-[0px_8px_22px_-8px_rgba(0,0,0,0.35)]'
+    : ''
 
   const card = (
-    <div className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] ${className}`}>
+    <div className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] ${hoverClass} ${className}`}>
 
       {/* photo with badge + bookmark overlaid */}
       <div className="relative h-[163px] overflow-hidden">
