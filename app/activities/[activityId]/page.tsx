@@ -14,12 +14,25 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
+export function toValidActivityId(activityId: string): number | null {
+  const parsedId = Number(activityId)
+  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+}
+
+export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {
+  return (comments ?? []).map((entry) => ({
+    comment_id: entry.comment_id,
+    comment: entry.comment,
+    created_at: entry.created_at,
+    rating: Array.isArray(entry.ratings) ? (entry.ratings[0]?.rating ?? null) : (entry.ratings?.rating ?? null),
+  }))
+}
+
 export default async function ActivityDetailsPage({ params }: PageProps) {
   const { activityId } = await params
   const supabase = await createServerSupabaseClient()
 
-  const parsedId = Number(activityId)
-  const validId = Number.isInteger(parsedId) ? parsedId : null
+  const validId = toValidActivityId(activityId)
 
   if (!validId) {
     return (
@@ -57,12 +70,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
-  const initialComments = ((comments ?? []) as ActivityComment[]).map((entry) => ({
-    comment_id: entry.comment_id,
-    comment: entry.comment,
-    created_at: entry.created_at,
-    rating: Array.isArray(entry.ratings) ? (entry.ratings[0]?.rating ?? null) : (entry.ratings?.rating ?? null),
-  }))
+  const initialComments = normalizeActivityComments((comments ?? []) as ActivityComment[])
 
   return (
     <div className="min-h-screen bg-white">
