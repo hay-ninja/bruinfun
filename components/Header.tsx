@@ -1,9 +1,21 @@
 'use client'
 
+import { FormEvent, useState } from 'react'
 import { Search, CircleUserRound } from 'lucide-react'
 import Link from 'next/link'
 
-export default function Header() {
+type HeaderProps = {
+  onLogActivity?: (query?: string) => void
+}
+
+export default function Header({ onLogActivity }: HeaderProps) {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    onLogActivity?.(searchQuery)
+  }
+
   return (
     // frosted glass from figma, sticky so it stays up top
     <header className="w-full backdrop-blur-[3px] bg-[rgba(248,248,248,0.95)] border-b border-[#e0e0e0] shadow-[0px_1px_10px_0px_rgba(0,0,0,0.05)] px-[76px] py-[22px] flex items-center sticky top-0 z-50">
@@ -23,10 +35,15 @@ export default function Header() {
       </div>
 
       {/* search bar, fixed width between the two flex-1 sides */}
-      <div className="bg-[rgba(255,255,255,0.3)] rounded-full shadow-[0px_1.5px_15px_-0.75px_rgba(0,0,0,0.1)] w-[445px]">
+      <form
+        onSubmit={handleSearch}
+        className="bg-[rgba(255,255,255,0.3)] rounded-full shadow-[0px_1.5px_15px_-0.75px_rgba(0,0,0,0.1)] w-[445px]"
+      >
         <div className="flex items-center justify-between pl-[19px] pr-[9px] py-[6px]">
           <input
             type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="What sounds fun right now?"
             className="flex-1 bg-transparent text-[17px] font-normal text-black placeholder:text-[rgba(0,0,0,0.3)] outline-none"
           />
@@ -38,11 +55,15 @@ export default function Header() {
             <Search size={14} strokeWidth={2.5} className="text-[#eaf4fa]" />
           </button>
         </div>
-      </div>
+      </form>
 
       {/* right side actions, flex-1 to balance the logo side */}
       <div className="flex-1 flex items-center justify-end gap-[14px]">
-        <button className="bg-[#1f93cd] text-[#eaf4fa] text-[16px] font-medium px-[16px] py-[10px] rounded-full leading-none">
+        <button
+          type="button"
+          onClick={() => onLogActivity?.()}
+          className="bg-[#1f93cd] text-[#eaf4fa] text-[16px] font-medium px-[16px] py-[10px] rounded-full leading-none"
+        >
           Log Activity
         </button>
         {/* profile icon — links to own profile page */}
