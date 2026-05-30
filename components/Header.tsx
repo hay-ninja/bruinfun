@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react'
 import { Search, CircleUserRound } from 'lucide-react'
+import Link from 'next/link'
 
 type HeaderProps = {
   onLogActivity?: (query?: string) => void
@@ -65,13 +66,13 @@ export default function Header({ onLogActivity }: HeaderProps) {
         >
           Log Activity
         </button>
-        {/* profile icon */}
-        <button
+        {/* profile icon — links to own profile page */}
+        <Link href="/profile"
           aria-label="Profile"
           className="w-[40px] h-[40px] bg-[rgba(255,255,255,0.3)] rounded-full flex items-center justify-center"
         >
           <CircleUserRound size={20} className="text-[rgba(0,0,0,0.3)]" strokeWidth={1.5} />
-        </button>
+        </Link>
       </div>
     </header>
   )
