@@ -6,6 +6,13 @@ type PageProps = {
   params: Promise<{ activityId: string }>
 }
 
+type ActivityComment = {
+  comment_id: number
+  comment: string
+  created_at: string | null
+  ratings: { rating: number } | { rating: number }[] | null
+}
+
 export default async function ActivityDetailsPage({ params }: PageProps) {
   const { activityId } = await params
   const supabase = await createServerSupabaseClient()
@@ -30,6 +37,12 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
     .eq('activity_id', validId)
     .single()
+
+  const { data: comments, error: commentsError } = await supabase
+    .from('comments')
+    .select('comment_id, comment, created_at, ratings(rating)')
+    .eq('activity_id', validId)
+    .order('created_at', { ascending: false })
 
   if (error || !activity) {
     return (
@@ -69,6 +82,40 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <p className="mt-6 whitespace-pre-wrap text-[16px] leading-relaxed text-[#323232]">
             {activity.description || 'No description available.'}
           </p>
+
+          <section className="mt-8 border-t border-[rgba(192,199,209,0.6)] pt-6">
+            <h2 className="font-[family-name:var(--font-nunito)] text-[24px] font-semibold text-[#191c20]">Comments</h2>
+
+            {commentsError ? (
+              <p className="mt-4 text-[15px] text-red-500">Could not load comments right now.</p>
+            ) : null}
+
+            {!commentsError && (!comments || comments.length === 0) ? (
+              <p className="mt-4 text-[15px] text-[#6d7783]">No comments yet.</p>
+            ) : null}
+
+            {!commentsError && comments && comments.length > 0 ? (
+              <div className="mt-4 flex flex-col gap-3">
+                {(comments as ActivityComment[]).map((entry) => {
+                  const nestedRating = Array.isArray(entry.ratings)
+                    ? entry.ratings[0]?.rating
+                    : entry.ratings?.rating
+
+                  return (
+                    <article key={entry.comment_id} className="rounded-xl border border-[rgba(192,199,209,0.6)] bg-white/70 p-4">
+                      <div className="mb-2 flex items-center justify-between gap-2 text-[13px] text-[#6d7783]">
+                        <span>
+                          {entry.created_at ? new Date(entry.created_at).toLocaleDateString() : 'Recent'}
+                        </span>
+                        {typeof nestedRating === 'number' ? <span>{nestedRating} ★</span> : null}
+                      </div>
+                      <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[#323232]">{entry.comment}</p>
+                    </article>
+                  )
+                })}
+              </div>
+            ) : null}
+          </section>
         </div>
       </main>
       <Footer />

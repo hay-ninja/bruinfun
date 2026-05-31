@@ -49,7 +49,7 @@ export default function ActivityRow({ title, activities }: ActivityRowProps) {
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {activities.map((a) => (
-            <ActivityCard key={a.id} {...a} />
+            <ActivityCard key={a.id} {...a} href={`/activities/${a.id}`} />
           ))}
         </div>
 

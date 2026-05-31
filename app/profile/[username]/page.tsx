@@ -93,7 +93,8 @@ export default function PublicProfilePage() {
                         {posted.map((a) => (
                             <ActivityCard key={a.activity_id} title={a.title} rating={0}
                                 location={a.location ?? ''} category={a.category as any}
-                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`} />
+                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
+                                href={`/activities/${a.activity_id}`} />
                         ))}
                     </div>
                 )}
@@ -105,7 +106,8 @@ export default function PublicProfilePage() {
                             <div key={entry.rating_id} className="flex gap-[16px] items-start">
                                 <ActivityCard title={entry.activities.title} rating={entry.rating}
                                     location={entry.activities.location ?? ''} category={entry.activities.category as any}
-                                    imageUrl={entry.activities.image_url ?? `https://picsum.photos/seed/${entry.activities.activity_id}/400/300`} />
+                                    imageUrl={entry.activities.image_url ?? `https://picsum.photos/seed/${entry.activities.activity_id}/400/300`}
+                                    href={`/activities/${entry.activities.activity_id}`} />
                                 <p className="text-[15px] font-medium text-[#191c20] pt-[8px]">{entry.rating} ★</p>
                             </div>
                         ))}

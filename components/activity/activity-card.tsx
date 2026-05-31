@@ -1,5 +1,6 @@
 // individual card! thanks kai for design so clutch
 import { MapPin, Users, Utensils, Tag, Zap, Calendar } from 'lucide-react'
+import Link from 'next/link'
 
 type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
 
@@ -8,6 +9,7 @@ type ActivityCardProps = {
   rating: number
   location: string
   imageUrl: string
+  href?: string
   category?: Category
   attendeeCount?: number
   tags?: string[]
@@ -38,6 +40,7 @@ export default function ActivityCard({
   rating,
   location,
   imageUrl,
+  href,
   category,
   attendeeCount,
   tags = [],
@@ -48,7 +51,7 @@ export default function ActivityCard({
   const badgeColor = category ? CATEGORY_COLORS[category] : '#007aff'
   const badgeIcon  = category ? CATEGORY_ICONS[category]  : null
 
-  return (
+  const card = (
     <div className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] ${className}`}>
 
       {/* photo with badge + bookmark overlaid */}
@@ -121,5 +124,13 @@ export default function ActivityCard({
         )}
       </div>
     </div>
+  )
+
+  if (!href) return card
+
+  return (
+    <Link href={href} className="block rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f93cd] focus-visible:ring-offset-2">
+      {card}
+    </Link>
   )
 }

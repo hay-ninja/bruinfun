@@ -129,7 +129,7 @@ export default function BrowseAll({ activities }: BrowseAllProps) {
       {/* 4 col grid */}
       <div className="grid grid-cols-4 gap-[28px]">
         {visible.map(a => (
-          <ActivityCard key={a.id} {...a} className="w-full" />
+          <ActivityCard key={a.id} {...a} href={`/activities/${a.id}`} className="w-full" />
         ))}
       </div>
 
