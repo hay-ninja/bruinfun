@@ -27,8 +27,14 @@ export function formatDate(value: string | null) {
 }
 
 export function clampRatingValue(value: number): number {
-  if (Number.isNaN(value)) return 1
-  return Math.min(10, Math.max(1, value))
+  if (Number.isNaN(value)) return 0
+  const truncated = Math.trunc(value)
+  return Math.min(10, Math.max(0, truncated))
+}
+
+export function sanitizeRatingInput(value: string): number {
+  const parsed = Number(value)
+  return clampRatingValue(parsed)
 }
 
 export default function ActivityCommentsSection({
@@ -37,7 +43,7 @@ export default function ActivityCommentsSection({
   loadError,
 }: ActivityCommentsSectionProps) {
   const [comments, setComments] = useState<ActivityCommentItem[]>(initialComments)
-  const [rating, setRating] = useState(8)
+  const [ratingInput, setRatingInput] = useState('8')
   const [comment, setComment] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -56,10 +62,12 @@ export default function ActivityCommentsSection({
     setError('')
 
     try {
+      const safeRating = sanitizeRatingInput(ratingInput)
+
       const ratingRes = await fetch('/api/ratings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activity_id: activityId, rating }),
+        body: JSON.stringify({ activity_id: activityId, rating: safeRating }),
       })
       const ratingJson = (await ratingRes.json()) as RatingResponse | { error?: string }
 
@@ -92,10 +100,11 @@ export default function ActivityCommentsSection({
           comment_id: commentJson.comment_id ?? Date.now(),
           comment: commentJson.comment ?? trimmedComment,
           created_at: commentJson.created_at ?? new Date().toISOString(),
-          rating,
+          rating: safeRating,
         },
         ...prev,
       ])
+      setRatingInput(String(safeRating))
       setComment('')
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Could not save your comment.')
@@ -113,14 +122,26 @@ export default function ActivityCommentsSection({
           <label htmlFor="activity-rating" className="text-[14px] font-medium text-[#323232]">Your rating</label>
           <input
             id="activity-rating"
-            type="number"
-            min={1}
-            max={10}
-            value={rating}
-            onChange={(event) => setRating(clampRatingValue(Number(event.target.value) || 1))}
+            type="text"
+            inputMode="decimal"
+            value={ratingInput}
+            onChange={(event) => {
+              const nextValue = event.target.value
+              if (nextValue === '' || /^-?\d*\.?\d*$/.test(nextValue)) {
+                setRatingInput(nextValue)
+              }
+            }}
+            onBlur={() => {
+              if (!ratingInput.trim()) {
+                setRatingInput('')
+                return
+              }
+
+              setRatingInput(String(sanitizeRatingInput(ratingInput)))
+            }}
             className="w-20 rounded-md border border-[#d5dce3] px-2 py-1 text-[14px] text-[#191c20]"
           />
-          <span className="text-[13px] text-[#6d7783]">1 to 10</span>
+          <span className="text-[13px] text-[#6d7783]">0 to 10</span>
         </div>
 
         <textarea
