@@ -40,7 +40,7 @@ export default function ActivityRow({ title, activities, onSelect }: ActivityRow
         {/* inline style needed to hide scrollbar cross-browser, tailwind alone doesnt cut it */}
         <div
           ref={scrollRef}
-          className="flex gap-[21px] overflow-x-auto pb-2"
+          className="flex gap-[21px] overflow-x-auto p-2"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           onScroll={(e) => setScrolled(e.currentTarget.scrollLeft > 0)}
         >

@@ -57,7 +57,10 @@ export default function ActivityCard({
     : ''
 
   const card = (
-    <div className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] ${hoverClass} ${className}`}>
+    <div
+      onClick={onClick}
+      className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-2px_rgba(0,0,0,0.2)] transition-shadow ${onClick ? 'cursor-pointer hover:shadow-[0px_4px_24px_-1px_rgba(0,0,0,0.25)]' : ''} ${className}`}
+    >
 
       {/* photo with badge + bookmark overlaid */}
       <div className="relative h-[163px] overflow-hidden">
