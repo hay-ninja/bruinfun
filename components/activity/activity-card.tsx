@@ -119,7 +119,7 @@ export default function ActivityCard({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-[11.8px] font-semibold text-[#323232] bg-[rgba(255,255,255,0.8)] border border-white px-[9px] py-[4.5px] rounded-full"
+                  className="text-[11.8px] font-semibold text-[#323232] bg-[rgba(255,255,255,0.8)] border border-[rgba(166, 166, 166, 0.8)] px-[9px] py-[4.5px] rounded-full"
                 >
                   {tag}
                 </span>
