@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 // sky scene footer — clouds + grass + BRUIN FUN ghost text
 export default function Footer() {
   return (
@@ -32,11 +33,6 @@ export default function Footer() {
       {/* BRUIN FUN ghost text, overlay makes it look carved into the sky */}
       <div className="absolute mix-blend-overlay opacity-80" style={{ right: '23%', top: '50%', width: '55%' }}>
         <img src="/footer/bruinfun.png" alt="Bruin Fun" className="w-full" />
-      </div>
-
-      {/* user's grass image, pinned to very bottom */}
-      <div className="absolute bottom-0 left-0 right-0" style={{ height: '28%' }}>
-        <img src="/footer/grass.jpg" alt="" className="w-full h-full object-cover object-bottom" />
       </div>
     </footer>
   )
