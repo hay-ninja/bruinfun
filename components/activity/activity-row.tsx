@@ -27,7 +27,7 @@ export default function ActivityRow({ title, activities, onSelect }: ActivityRow
   }
 
   return (
-    <section className="flex flex-col gap-[16px]">
+    <section className="flex flex-col gap-[16px] overflow-visible">
 
       {/* section title */}
       <h2 className="font-[family-name:var(--font-nunito)] text-[28px] font-semibold text-black tracking-[-0.28px]">
