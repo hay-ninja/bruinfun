@@ -1,0 +1,205 @@
+================================================================================
+BRUINFUN — THINGS I LEARNED
+================================================================================
+Only updated when explicitly told to. Append new sessions at the bottom.
+================================================================================
+
+SESSION 1 — May 14, 2026
+Topic: Next.js App Router project setup from scratch
+--------------------------------------------------------------------------------
+
+1. NEXT.JS HAS NO index.html
+   There's no index.html in Next.js App Router. Next.js generates the HTML from
+   your React components at build/request time.
+   - app/page.tsx  →  your homepage (the "/" route)
+   - app/layout.tsx  →  wraps every page, replaces the <html>, <head>, <body>
+     you'd normally write in a raw HTML file
+   To migrate an existing index.html: convert the <body> content into JSX inside
+   page.tsx, and move <head> stuff (title, meta, links) into the metadata export
+   in layout.tsx.
+
+2. ROOT LAYOUT (app/layout.tsx)
+   This is the outermost wrapper for every page in your app. It must:
+   - Export a default function that accepts { children: React.ReactNode }
+   - Return <html> and <body> tags (required — Next.js will error without them)
+   - Import globals.css (this is where Tailwind's styles load globally)
+   - Export a `metadata` object for the <title> and <meta description> tags
+   The Geist fonts and Readonly<> wrapper that create-next-app adds are optional
+   template noise — you can strip them for a cleaner start.
+
+3. CONFIG FILES MUST LIVE AT THE ROOT — AND WHY
+   Every tool in the JS ecosystem looks for its config in one hardcoded spot:
+   - package.json      → npm requires this here, no override exists
+   - tsconfig.json     → Next.js reads path aliases (like @/) from root only
+   - next.config.ts    → Next.js only ever looks in the project root
+   - postcss.config.mjs→ PostCSS resolves from the directory you run builds from
+   - eslint.config.mjs → ESLint walks up from root to find its config
+   You can't meaningfully move them. The root clutter is just the cost of using
+   these tools. Symlinks to a config/ folder create more problems than they solve.
+
+4. WHAT EACH CONFIG FILE ACTUALLY DOES
+   - package.json       → defines the project, dependencies, and npm scripts
+                          (dev, build, start, lint). The source of truth for
+                          everything npm touches.
+   - tsconfig.json      → TypeScript compiler settings. Most importantly, sets
+                          "paths" so @/ resolves to your project root (so you can
+                          write `import X from "@/lib/utils"` anywhere).
+   - next.config.ts     → Controls Next.js behavior: image domains, redirects,
+                          env var exposure, experimental features, etc.
+   - postcss.config.mjs → Runs PostCSS plugins during the CSS build step.
+                          Required for Tailwind v4 (@tailwindcss/postcss plugin).
+   - eslint.config.mjs  → Linting rules. Catches bugs, enforces conventions.
+                          The nextTs spread adds TypeScript-aware rules.
+
+5. SHADCN/UI IS NOT A NORMAL NPM PACKAGE
+   You don't `import { Button } from "shadcn-ui"`. Instead:
+   - `npx shadcn@latest init`   → one-time setup (run once per project)
+   - `npx shadcn add button`    → copies button.tsx into components/ui/
+   - `npx shadcn add dialog card input` → adds multiple components at once
+   Each component lands in components/ui/ as YOUR code. You own it, you can
+   edit it, restyle it, break it. shadcn is a code delivery mechanism, not a
+   runtime dependency.
+   What `init` does specifically:
+     1. Creates components.json — tells shadcn where your files live
+     2. Adds CSS variable definitions to globals.css (colors, border-radius)
+     3. Installs clsx and tailwind-merge as real npm dependencies
+
+6. THE cn() HELPER IN lib/utils.ts
+   Every shadcn component uses `cn()` to merge Tailwind classes safely.
+   It combines two libraries:
+   - clsx        → conditionally joins class strings ("text-red" + false + "p-4")
+   - tailwind-merge → resolves Tailwind conflicts (e.g. "p-2 p-4" → "p-4")
+   Without tailwind-merge, stacking Tailwind classes can produce unexpected
+   output because CSS specificity doesn't care about order in a utility-first
+   system. cn() fixes this at the call site.
+
+7. TAILWIND v4 DIRECTIVE SYNTAX
+   Tailwind v4 changed the CSS entry point. Instead of three separate directives:
+     @tailwind base;
+     @tailwind components;
+     @tailwind utilities;
+   You now write a single import in globals.css:
+     @import "tailwindcss";
+   There's also no tailwind.config.js in v4 — all theme customization moves
+   into CSS using @theme blocks inside globals.css.
+
+8. SUPABASE CLIENT SETUP (lib/supabase.ts)
+   The client reads from two env vars that must be prefixed NEXT_PUBLIC_ to be
+   accessible in the browser:
+     NEXT_PUBLIC_SUPABASE_URL      → your project's API endpoint
+     NEXT_PUBLIC_SUPABASE_ANON_KEY → your project's public (anon) key
+   @supabase/supabase-js is the JS client. @supabase/ssr adds helpers for
+   cookie-based auth in server components and middleware. Never put the service
+   role key (full admin access) in a NEXT_PUBLIC_ variable.
+
+9. .env.local vs .env
+   Next.js loads multiple env files in priority order (higher = wins):
+     .env.local > .env.development/.env.production > .env
+   .env.local is git-ignored by default — it's the right place for secrets.
+   .env is committed and used for non-secret defaults or placeholders.
+   For this project: real Supabase keys go in .env.local, not .env.
+
+================================================================================
+END OF SESSION 1
+================================================================================
+
+SESSION 2 — May 14, 2026
+Topic: How CSS works, Tailwind, shadcn's globals.css, and converting HTML to React
+--------------------------------------------------------------------------------
+
+10. HOW CSS WORKS (THE BASICS)
+    CSS is a list of rules: "find this thing, make it look like this."
+      selector { property: value; }
+    Example:
+      p { color: red; font-size: 16px; }
+    The selector finds elements, the properties style them. That's the whole idea.
+
+11. CSS VARIABLES
+    You can store values in named slots and reuse them anywhere:
+      :root { --my-color: blue; }
+      p { color: var(--my-color); }
+    :root means "the top of the page" — best place for global variables.
+    Change the slot once, everything using it updates automatically.
+
+12. HOW SHADCN USES CSS VARIABLES FOR THEMING
+    shadcn defines color slots in :root:
+      :root { --primary: oklch(0.205 0 0); --background: oklch(1 0 0); }
+    For dark mode it just overrides the same slots:
+      .dark { --primary: oklch(0.922 0 0); --background: oklch(0.145 0 0); }
+    Nothing else changes. Every element using --primary flips automatically
+    because the slot's value changed. No JavaScript needed.
+
+13. THE @theme BLOCK — HOW TAILWIND READS CSS VARIABLES
+    Tailwind generates utility classes like bg-red-500, text-blue-300.
+    The @theme block in globals.css tells Tailwind to generate classes for
+    your custom variables too:
+      @theme inline {
+        --color-primary: var(--primary);
+      }
+    This creates bg-primary, text-primary, border-primary as real Tailwind
+    classes that resolve to whatever --primary is set to in :root.
+
+14. THE FULL CHAIN: className → screen color
+      You write:     className="bg-primary"
+      Tailwind says: bg-primary → use --color-primary
+      @theme says:   --color-primary → look at var(--primary)
+      :root says:    --primary → oklch(0.205 0 0)
+      Browser draws: a dark background
+    If the user has dark mode, .dark overrides --primary and the color flips.
+    All automatic, no JS.
+
+15. OKLCH COLOR FORMAT
+    shadcn v4 uses oklch(lightness chroma hue) instead of hex (#2774AE).
+    oklch is a modern CSS color space that's perceptually uniform — gradients
+    and tints look more natural. To convert hex to oklch, use an online tool.
+    UCLA Blue #2774AE ≈ oklch(0.45 0.15 240)
+    UCLA Gold #FFD100 ≈ oklch(0.88 0.18 95)
+
+16. @layer base IN globals.css
+    The block at the bottom of globals.css:
+      @layer base {
+        * { @apply border-border outline-ring/50; }
+        body { @apply bg-background text-foreground; }
+      }
+    @apply is Tailwind shorthand — @apply bg-background is the same as writing
+    background: var(--background) in plain CSS. This sets sensible defaults on
+    every element so the right colors apply without adding classes to every tag.
+
+17. CONVERTING index.html → REACT COMPONENTS
+    The mental model for converting vanilla HTML to Next.js:
+      <nav class="sidebar">        → components/sidebar.tsx
+      <div class="tabs">           → components/category-tabs.tsx
+      <div class="filters">        → components/filter-pills.tsx
+      <div class="card">           → components/activity-card.tsx
+      vanilla JS classList toggle  → React useState hook
+      inline <style> CSS           → Tailwind utility classes on each element
+      hardcoded JS data array      → const in page.tsx (or separate data file)
+
+18. "use client" — WHEN AND WHY
+    In Next.js App Router, components are Server Components by default (faster,
+    run only on the server). If a component uses React hooks like useState or
+    useEffect it MUST be a Client Component — add "use client" at the very top.
+    Rules of thumb:
+      - No hooks, just displays data  → server component, no directive needed
+      - Uses useState/useEffect       → add "use client" at top of file
+      - Handles click/input events    → usually needs "use client" too
+    In this project: CategoryTabs and FilterPills are client components because
+    they track which tab/pill is active with useState.
+
+19. TYPESCRIPT INTERFACES FOR REACT PROPS
+    When passing data between components, TypeScript needs to know the shape:
+      interface ActivityCardProps {
+        title: string;
+        rating: string;
+        desc: string;
+        imgUrl: string;
+      }
+    This is called typing your props. Benefits:
+      - Editor autocompletes prop names when you use the component
+      - TypeScript errors immediately if you forget a required prop
+      - Refactoring one component tells you every other place that broke
+    Without interfaces TypeScript treats props as `any` — defeats the purpose.
+
+================================================================================
+END OF SESSION 2
+================================================================================

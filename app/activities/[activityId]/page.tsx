@@ -1,5 +1,6 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import CompleteActivityButton from '@/components/CompleteActivityButton'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 type PageProps = {
@@ -25,11 +26,25 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const isLoggedIn = !!user
+
   const { data: activity, error } = await supabase
     .from('activities')
     .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
     .eq('activity_id', validId)
     .single()
+
+  let existingRating: number | null = null
+  if (user) {
+    const { data: ratingRow } = await supabase
+      .from('ratings')
+      .select('rating')
+      .eq('activity_id', validId)
+      .eq('profile_id', user.id)
+      .single()
+    existingRating = ratingRow?.rating ?? null
+  }
 
   if (error || !activity) {
     return (
@@ -64,6 +79,14 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
             <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{activity.category ?? 'uncategorized'}</span>
             <span>{activity.location ?? 'Location unavailable'}</span>
             {activity.avg_rating ? <span>{activity.avg_rating} ★</span> : null}
+          </div>
+
+          <div className="mt-4">
+            <CompleteActivityButton
+              activity={activity}
+              isLoggedIn={isLoggedIn}
+              existingRating={existingRating}
+            />
           </div>
 
           <p className="mt-6 whitespace-pre-wrap text-[16px] leading-relaxed text-[#323232]">
