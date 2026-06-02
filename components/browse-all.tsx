@@ -82,7 +82,7 @@ export default function BrowseAll({ activities }: BrowseAllProps) {
                 <button
                   key={f.label}
                   onClick={() => handleFilter(f.category)}
-                  className={`flex items-center gap-[5.5px] pl-[13px] pr-[16px] py-[8px] rounded-full text-[13px] font-semibold transition-colors ${
+                  className={`flex items-center gap-[5.5px] pl-[13px] pr-[16px] py-[8px] border border-[rgba(122, 122, 122, 0.88)] rounded-full text-[13px] font-semibold transition-colors ${
                     isActive
                       ? 'bg-black text-white'
                       : 'bg-[rgba(255,255,255,0.5)] text-[#323232]'
