@@ -1,5 +1,5 @@
 // individual card! thanks kai for design so clutch
-import { MapPin, Users, Utensils, Tag, Zap, Calendar } from 'lucide-react'
+import { MapPin, Users, Utensils, Tag, Zap, Calendar, Bookmark } from 'lucide-react'
 import Link from 'next/link'
 
 type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
@@ -77,12 +77,14 @@ export default function ActivityCard({
           </div>
         )}
 
-        {/* custom bookmark svg from figma, not a lucide icon */}
-        <div className="absolute top-[18px] right-[18px] drop-shadow-[0px_1.4px_1.4px_rgba(0,0,0,0.1)]">
-          <svg width="14" height="19" viewBox="0 0 14 19" fill={isBookmarked ? 'white' : 'rgba(0,0,0,0.2)'} xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 19V2C0 0.9 0.9 0 2 0H12C13.1 0 14 0.9 14 2V19L7 16L0 19Z" />
-          </svg>
-        </div>
+        {/* save button */}
+        <div className="absolute top-[18px] right-[18px]">
+            <button
+              //onClick={saveActivity}
+            >
+              <Bookmark size={20} className="fill-[rgba(10, 10, 10, 0.71)] stroke-white hover:fill-white transition-colors" />
+            </button>
+          </div>
       </div>
 
       {/* everything below the photo */}
