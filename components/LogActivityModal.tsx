@@ -35,11 +35,12 @@ async function uploadToCloudinary(file: File) {
     body: data,
   });
 
+  const json = (await res.json()) as { secure_url?: string; error?: string };
+
   if (!res.ok) {
-    throw new Error("Image upload failed.");
+    throw new Error(json.error || "Image upload failed.");
   }
 
-  const json = (await res.json()) as { secure_url?: string };
   if (!json.secure_url) {
     throw new Error("Image upload did not return a URL.");
   }
@@ -47,18 +48,26 @@ async function uploadToCloudinary(file: File) {
   return json.secure_url;
 }
 
+function ratingColor(value: number) {
+  if (value <= 3) return "#ef4444";
+  if (value <= 6) return "#f59e0b";
+  return "#22c55e";
+}
+
 export default function LogActivityModal({
-  initialQuery,
+  initialQuery = "",
+  preSelectedActivity,
   onClose,
   onLogged,
 }: {
-  initialQuery: string;
+  initialQuery?: string;
+  preSelectedActivity?: Activity;
   onClose: () => void;
-  onLogged: () => void;
+  onLogged: (rating: number) => void;
 }) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [results, setResults] = useState<Activity[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(preSelectedActivity ?? null);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -75,13 +84,10 @@ export default function LogActivityModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (selectedActivity) return;
+    if (preSelectedActivity || selectedActivity) return;
 
     const query = searchQuery.trim();
-
-    if (query.length < 2) {
-      return;
-    }
+    if (query.length < 2) return;
 
     const timer = window.setTimeout(async () => {
       setSearching(true);
@@ -91,9 +97,7 @@ export default function LogActivityModal({
         const res = await fetch(`/api/activities?search=${encodeURIComponent(query)}`);
         const json = (await res.json()) as { data?: Activity[]; error?: string };
 
-        if (!res.ok) {
-          throw new Error(json.error || "Could not search activities.");
-        }
+        if (!res.ok) throw new Error(json.error || "Could not search activities.");
 
         setResults(json.data ?? []);
         setSearched(true);
@@ -105,12 +109,10 @@ export default function LogActivityModal({
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [searchQuery, selectedActivity]);
+  }, [searchQuery, selectedActivity, preSelectedActivity]);
 
   async function createActivityIfNeeded() {
-    if (selectedActivity) {
-      return selectedActivity;
-    }
+    if (selectedActivity) return selectedActivity;
 
     const imageUrl = newPhoto ? await uploadToCloudinary(newPhoto) : null;
     const res = await fetch("/api/activities", {
@@ -126,9 +128,7 @@ export default function LogActivityModal({
     });
     const json = (await res.json()) as Activity | { error?: string };
 
-    if (!res.ok) {
-      throw new Error("error" in json ? json.error : "Could not create activity.");
-    }
+    if (!res.ok) throw new Error("error" in json ? json.error : "Could not create activity.");
 
     return json as Activity;
   }
@@ -143,10 +143,7 @@ export default function LogActivityModal({
       const ratingRes = await fetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          activity_id: activity.activity_id,
-          rating,
-        }),
+        body: JSON.stringify({ activity_id: activity.activity_id, rating }),
       });
       const ratingJson = (await ratingRes.json()) as RatingResponse | { error?: string };
 
@@ -171,12 +168,10 @@ export default function LogActivityModal({
         });
         const commentJson = (await commentRes.json()) as { error?: string };
 
-        if (!commentRes.ok) {
-          throw new Error(commentJson.error || "Could not save comment.");
-        }
+        if (!commentRes.ok) throw new Error(commentJson.error || "Could not save comment.");
       }
 
-      onLogged();
+      onLogged(rating);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Could not log activity.");
     } finally {
@@ -186,200 +181,246 @@ export default function LogActivityModal({
 
   const needsCreate = !selectedActivity && searched && results.length === 0 && searchQuery.trim().length >= 2;
   const isCreatingNewActivity = needsCreate && !selectedActivity;
-  const canLog = Boolean(selectedActivity) || needsCreate;
+  const canLog = Boolean(preSelectedActivity) || Boolean(selectedActivity) || needsCreate;
+
+  const fill = ((rating - 1) / 9) * 100;
+  const color = ratingColor(rating);
+
+  const inputCls = "h-10 w-full rounded-xl border border-[rgba(192,199,209,0.8)] bg-white px-3 text-[14px] text-[#323232] outline-none placeholder:text-[#b0b8c1] focus:border-[#1f93cd] focus:ring-2 focus:ring-[#1f93cd]/20";
+  const sectionCls = "grid gap-3 rounded-2xl border border-[rgba(192,199,209,0.6)] bg-[#f8fafc] p-4";
+  const labelCls = "text-[13px] font-semibold text-[#6d7783] uppercase tracking-wide";
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#101114]/68 px-4 py-6">
-      <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-lg border-2 border-[#c27a14] bg-[#7b4300] shadow-2xl shadow-black/35">
-        <div className="flex items-center justify-between border-b border-[#a86105] bg-[#8f5005] px-5 py-4">
-          <h2 className="text-xl font-black tracking-normal text-[#ffd86a]">Log activity modal</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+      <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-[24px] border border-[rgba(192,199,209,0.6)] bg-white shadow-[0px_8px_40px_-4px_rgba(0,0,0,0.15)]">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[rgba(192,199,209,0.5)] px-6 py-4">
+          <div>
+            <h2 className="font-[family-name:var(--font-nunito)] text-[20px] font-semibold text-[#191c20]">
+              {preSelectedActivity ? "Complete Activity" : "Log Activity"}
+            </h2>
+            {preSelectedActivity && (
+              <p className="mt-0.5 text-[13px] text-[#6d7783]">{preSelectedActivity.title}</p>
+            )}
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex size-9 items-center justify-center rounded-md text-[#ffd86a] hover:bg-[#a86105] hover:text-white"
             aria-label="Close"
+            className="inline-flex size-9 items-center justify-center rounded-full text-[#6d7783] hover:bg-[#f0f4f8] hover:text-[#191c20]"
           >
             <X className="size-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-5 px-5 py-5 text-[#ffe7a6]">
-          <section className="grid gap-3 rounded-md border border-[#a86105] bg-[#6b3900] p-3">
-            <p className="text-base font-black text-[#ffb322]">1. Search activity</p>
+        <form onSubmit={handleSubmit} className="grid gap-4 px-6 py-5">
 
-            {selectedActivity ? (
-              <div className="flex items-start justify-between gap-3 rounded-md border border-[#d99627] bg-[#8f5005] px-3 py-3">
-                <div>
-                  <p className="font-semibold text-[#fff0bf]">{selectedActivity.title}</p>
-                  <p className="text-sm text-[#ffd86a]">{selectedActivity.location}</p>
+          {/* Search / selected activity (hidden when pre-selected) */}
+          {!preSelectedActivity && (
+            <div className={sectionCls}>
+              <p className={labelCls}>Activity</p>
+
+              {selectedActivity ? (
+                <div className="flex items-start justify-between gap-3 rounded-xl border border-[rgba(192,199,209,0.6)] bg-white px-4 py-3">
+                  <div>
+                    <p className="text-[14px] font-semibold text-[#191c20]">{selectedActivity.title}</p>
+                    <p className="text-[13px] text-[#6d7783]">{selectedActivity.location}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedActivity(null)}
+                    className="shrink-0 rounded-lg px-2 py-1 text-[13px] font-medium text-[#1f93cd] hover:bg-[#eef6fb]"
+                  >
+                    Change
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedActivity(null)}
-                  className="rounded-md px-2 py-1 text-sm font-semibold text-[#ffcf4d] hover:bg-[#a86105]"
-                >
-                  Change
-                </button>
-              </div>
-            ) : (
-              <>
-                <label className="relative block">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#ffb322]" />
-                  <input
-                    autoFocus
-                    value={searchQuery}
-                    onChange={(event) => {
-                      const nextQuery = event.target.value;
-                      setSearchQuery(nextQuery);
-                      setNewTitle(nextQuery.trim());
+              ) : (
+                <>
+                  <label className="relative block">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#b0b8c1]" />
+                    <input
+                      autoFocus
+                      value={searchQuery}
+                      onChange={(event) => {
+                        const q = event.target.value;
+                        setSearchQuery(q);
+                        setNewTitle(q.trim());
+                        if (q.trim().length < 2) {
+                          setResults([]);
+                          setSearched(false);
+                        }
+                      }}
+                      placeholder="Search activities…"
+                      className={`${inputCls} pl-9`}
+                    />
+                  </label>
 
-                      if (nextQuery.trim().length < 2) {
-                        setResults([]);
-                        setSearched(false);
-                      }
-                    }}
-                    className="h-11 w-full rounded-md border border-[#c27a14] bg-[#fff0bf] pl-10 pr-3 text-[#5c3500] outline-none placeholder:text-[#9b784d] focus:border-[#ffb322] focus:ring-2 focus:ring-[#ffb322]/35"
-                  />
-                </label>
+                  {searching && (
+                    <div className="flex items-center gap-2 text-[13px] text-[#6d7783]">
+                      <Loader2 className="size-4 animate-spin" />
+                      Searching…
+                    </div>
+                  )}
 
-                {searching ? (
-                  <div className="flex items-center gap-2 text-sm text-[#ffd86a]">
-                    <Loader2 className="size-4 animate-spin" />
-                    Searching
-                  </div>
-                ) : null}
+                  {results.length > 0 && (
+                    <div className="grid gap-1.5">
+                      {results.map((activity) => (
+                        <button
+                          type="button"
+                          key={activity.activity_id}
+                          onClick={() => setSelectedActivity(activity)}
+                          className="rounded-xl border border-[rgba(192,199,209,0.6)] bg-white px-4 py-3 text-left hover:border-[#1f93cd] hover:bg-[#eef6fb]"
+                        >
+                          <span className="block text-[14px] font-semibold text-[#191c20]">{activity.title}</span>
+                          <span className="block text-[13px] text-[#6d7783]">{activity.location}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
 
-                {results.length > 0 ? (
-                  <div className="grid gap-2">
-                    {results.map((activity) => (
-                      <button
-                        type="button"
-                        key={activity.activity_id}
-                        onClick={() => setSelectedActivity(activity)}
-                        className="rounded-md border border-[#a86105] bg-[#8f5005] px-3 py-3 text-left hover:border-[#ffb322] hover:bg-[#9b5b0a]"
-                      >
-                        <span className="block font-semibold text-[#fff0bf]">{activity.title}</span>
-                        <span className="block text-sm text-[#ffd86a]">{activity.location}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </>
-            )}
-
-            {needsCreate ? (
-              <div className="grid gap-3 rounded-md border border-[#c27a14] bg-[#8f5005] p-3">
-                <div>
-                  <p className="text-sm font-black text-[#ffb322]">Not found. Create new activity?</p>
-                  <p className="mt-1 rounded-md border border-[#c27a14] bg-[#6b3900] px-3 py-2 text-sm font-semibold text-[#fff0bf]">
+              {needsCreate && (
+                <div className="grid gap-3 rounded-xl border border-[rgba(192,199,209,0.6)] bg-white p-4">
+                  <p className="text-[13px] font-semibold text-[#6d7783]">
+                    No match found — create a new activity?
+                  </p>
+                  <p className="rounded-lg border border-[rgba(192,199,209,0.6)] bg-[#f8fafc] px-3 py-2 text-[14px] font-semibold text-[#191c20]">
                     {newTitle}
                   </p>
-                </div>
-                <textarea
-                  required
-                  value={newDescription}
-                  onChange={(event) => setNewDescription(event.target.value)}
-                  className="min-h-24 resize-y rounded-md border border-[#c27a14] bg-[#fff0bf] px-3 py-2 text-[#5c3500] outline-none placeholder:text-[#9b784d] focus:border-[#ffb322] focus:ring-2 focus:ring-[#ffb322]/35"
-                  placeholder="Description"
-                />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <select
-                    value={newCategory}
-                    onChange={(event) => setNewCategory(event.target.value)}
-                    className="h-10 rounded-md border border-[#c27a14] bg-[#fff0bf] px-3 capitalize text-[#5c3500] outline-none focus:border-[#ffb322] focus:ring-2 focus:ring-[#ffb322]/35"
-                  >
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                  <input
+                  <textarea
                     required
-                    value={newLocation}
-                    onChange={(event) => setNewLocation(event.target.value)}
-                    className="h-10 rounded-md border border-[#c27a14] bg-[#fff0bf] px-3 text-[#5c3500] outline-none placeholder:text-[#9b784d] focus:border-[#ffb322] focus:ring-2 focus:ring-[#ffb322]/35"
-                    placeholder="Location"
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="Description"
+                    className="min-h-20 resize-y rounded-xl border border-[rgba(192,199,209,0.8)] bg-white px-3 py-2.5 text-[14px] text-[#323232] outline-none placeholder:text-[#b0b8c1] focus:border-[#1f93cd] focus:ring-2 focus:ring-[#1f93cd]/20"
                   />
-                </div>
-                <label className="flex items-center gap-2 rounded-md border border-[#c27a14] bg-[#fff0bf] px-3 py-2 text-sm text-[#5c3500]">
-                  <ImageIcon className="size-4" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => setNewPhoto(event.target.files?.[0] ?? null)}
-                    className="min-w-0 flex-1 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#ffb322] file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-[#5c3500]"
-                  />
-                </label>
-              </div>
-            ) : null}
-          </section>
-
-          {canLog ? (
-            <>
-              <section className="grid gap-3 rounded-md border border-[#a86105] bg-[#6b3900] p-3">
-                <p className="text-base font-black text-[#ffb322]">2. Rating 1-10</p>
-                <div className="flex items-center gap-4">
-                  <input
-                    required
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={rating}
-                    onChange={(event) => setRating(Number(event.target.value))}
-                    className="h-2 flex-1 accent-[#ffb322]"
-                  />
-                  <span className="inline-flex size-11 items-center justify-center rounded-md bg-[#ffb322] text-base font-black text-[#5c3500]">
-                    {rating}
-                  </span>
-                </div>
-              </section>
-
-              <section className="grid gap-3 rounded-md border border-[#a86105] bg-[#6b3900] p-3">
-                <p className="text-base font-black text-[#ffb322]">
-                  {isCreatingNewActivity ? "3. Optional note" : "3. Comment + photo"}
-                </p>
-                <textarea
-                  value={comment}
-                  onChange={(event) => setComment(event.target.value)}
-                  placeholder={
-                    isCreatingNewActivity
-                      ? "Add a note about this activity"
-                      : "Add a comment about your experience"
-                  }
-                  className="min-h-24 resize-y rounded-md border border-[#c27a14] bg-[#fff0bf] px-3 py-2 text-[#5c3500] outline-none placeholder:text-[#9b784d] focus:border-[#ffb322] focus:ring-2 focus:ring-[#ffb322]/35"
-                />
-                {selectedActivity ? (
-                  <label className="flex items-center gap-2 rounded-md border border-[#c27a14] bg-[#fff0bf] px-3 py-2 text-sm text-[#5c3500]">
-                    <ImageIcon className="size-4" />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <select
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      className={inputCls}
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat} className="capitalize">{cat}</option>
+                      ))}
+                    </select>
+                    <input
+                      required
+                      value={newLocation}
+                      onChange={(e) => setNewLocation(e.target.value)}
+                      placeholder="Location"
+                      className={inputCls}
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 rounded-xl border border-[rgba(192,199,209,0.8)] bg-white px-3 py-2.5 text-[13px] text-[#6d7783]">
+                    <ImageIcon className="size-4 shrink-0" />
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(event) => setLogPhoto(event.target.files?.[0] ?? null)}
-                      className="min-w-0 flex-1 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-[#ffb322] file:px-3 file:py-1.5 file:text-sm file:font-bold file:text-[#5c3500]"
+                      onChange={(e) => setNewPhoto(e.target.files?.[0] ?? null)}
+                      className="min-w-0 flex-1 text-[13px] file:mr-3 file:rounded-lg file:border-0 file:bg-[#eef6fb] file:px-3 file:py-1.5 file:text-[13px] file:font-semibold file:text-[#1f93cd]"
                     />
                   </label>
-                ) : null}
-              </section>
-            </>
-          ) : null}
+                </div>
+              )}
+            </div>
+          )}
 
-          {error ? (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {/* Rating */}
+          {canLog && (
+            <div className={sectionCls}>
+              <div className="flex items-center justify-between">
+                <p className={labelCls}>Rating <span className="text-[#ef4444]">*</span></p>
+                <span
+                  className="inline-flex size-10 items-center justify-center rounded-full text-[16px] font-bold text-white transition-colors"
+                  style={{ background: color }}
+                >
+                  {rating}
+                </span>
+              </div>
+
+              <div className="relative flex h-6 items-center">
+                <div className="pointer-events-none absolute inset-x-0 h-2 rounded-full bg-[#e5e7eb]">
+                  <div
+                    className="h-full rounded-full transition-all duration-75"
+                    style={{
+                      width: `${fill}%`,
+                      background: "linear-gradient(to right, #ef4444, #f59e0b, #22c55e)",
+                    }}
+                  />
+                </div>
+                <input
+                  required
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={rating}
+                  onChange={(e) => setRating(Number(e.target.value))}
+                  className="relative w-full cursor-pointer appearance-none bg-transparent [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-[#1f93cd] [&::-moz-range-thumb]:bg-white [&::-moz-range-track]:bg-transparent [&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-[#1f93cd] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_1px_6px_rgba(0,0,0,0.18)]"
+                />
+              </div>
+
+              <div className="flex justify-between text-[12px] text-[#b0b8c1]">
+                <span>1 — Terrible</span>
+                <span>10 — Amazing</span>
+              </div>
+            </div>
+          )}
+
+          {/* Comment + photo */}
+          {canLog && (
+            <div className={sectionCls}>
+              <p className={labelCls}>
+                {isCreatingNewActivity ? "Note" : "Comment"}{" "}
+                <span className="font-normal normal-case tracking-normal text-[#b0b8c1]">(optional)</span>
+              </p>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={
+                  isCreatingNewActivity
+                    ? "Add a note about this activity"
+                    : "How was it? Would you recommend it?"
+                }
+                className="min-h-[88px] resize-none rounded-xl border border-[rgba(192,199,209,0.8)] bg-white px-4 py-3 text-[14px] text-[#323232] outline-none placeholder:text-[#b0b8c1] focus:border-[#1f93cd] focus:ring-2 focus:ring-[#1f93cd]/20"
+              />
+              {selectedActivity && (
+                <label className="flex items-center gap-2 rounded-xl border border-[rgba(192,199,209,0.8)] bg-white px-3 py-2.5 text-[13px] text-[#6d7783]">
+                  <ImageIcon className="size-4 shrink-0" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setLogPhoto(e.target.files?.[0] ?? null)}
+                    className="min-w-0 flex-1 text-[13px] file:mr-3 file:rounded-lg file:border-0 file:bg-[#eef6fb] file:px-3 file:py-1.5 file:text-[13px] file:font-semibold file:text-[#1f93cd]"
+                  />
+                </label>
+              )}
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[13px] text-red-700">
               {error}
             </div>
-          ) : null}
+          )}
 
-          <div className="flex justify-end gap-2 border-t border-[#a86105] pt-4">
-            <Button type="button" variant="ghost" className="rounded-md text-[#ffe7a6] hover:bg-[#8f5005] hover:text-white" onClick={onClose}>
+          <div className="flex justify-end gap-2 border-t border-[rgba(192,199,209,0.4)] pt-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="rounded-full text-[#6d7783] hover:bg-[#f0f4f8]"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={saving || !canLog}
-              className="rounded-md bg-[#ffb322] font-black text-[#5c3500] hover:bg-[#ffd86a]"
+              className="rounded-full bg-[#1f93cd] text-white hover:bg-[#1a7fb3]"
             >
-              {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
               Submit
             </Button>
           </div>
