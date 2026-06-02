@@ -5,8 +5,6 @@ import Header from '@/components/Header'
 import HomeClient from '@/components/home-client'
 import Footer from '@/components/Footer'
 import LogActivityModal from '@/components/LogActivityModal'
-import ActivityRow from '@/components/activity/activity-row'
-import BrowseAll from '@/components/browse-all'
 import { TRENDING, OFF_CAMPUS, ON_CAMPUS } from '@/lib/mock-activities'
 
 const ALL_ACTIVITIES = [...TRENDING, ...OFF_CAMPUS, ...ON_CAMPUS]
@@ -22,23 +20,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <Header onLogActivity={() => setLogModalOpen(true)} />
 
-      <main className="px-[90px] py-[48px] flex flex-col gap-[48px]">
-        <ActivityRow title="Trending"    activities={TRENDING}   />
-        <ActivityRow title="Off-Campus"  activities={OFF_CAMPUS} />
-        <ActivityRow title="On-Campus"   activities={ON_CAMPUS}  />
-        <BrowseAll activities={ALL_ACTIVITIES} />
-      </main>
+      <HomeClient
+        trending={TRENDING}
+        offCampus={OFF_CAMPUS}
+        onCampus={ON_CAMPUS}
+        all={ALL_ACTIVITIES}
+      />
       <Footer />
 
-      {logModalOpen ? (
+      {logModalOpen && (
         <LogActivityModal
-          initialQuery={initialLogQuery}
+          initialQuery=""
           onClose={() => setLogModalOpen(false)}
           onLogged={() => setLogModalOpen(false)}
         />
-      ) : null}
+      )}
     </div>
   )
 }
