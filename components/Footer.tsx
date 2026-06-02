@@ -30,7 +30,7 @@ export default function Footer() {
       </div>
 
       {/* BRUIN FUN ghost text, overlay makes it look carved into the sky */}
-      <div className="absolute mix-blend-overlay opacity-80" style={{ right: '23%', top: '38%', width: '55%' }}>
+      <div className="absolute mix-blend-overlay opacity-80" style={{ right: '23%', top: '50%', width: '55%' }}>
         <img src="/footer/bruinfun.png" alt="Bruin Fun" className="w-full" />
       </div>
 
