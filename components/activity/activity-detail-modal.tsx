@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { MapPin, Users, Utensils, Tag, Zap, Calendar, ArrowLeft } from 'lucide-react'
+import { MapPin, Users, Utensils, Tag, Zap, Calendar, ArrowLeft, Bookmark } from 'lucide-react'
 import { type Activity } from '@/lib/mock-activities'
 
 type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
@@ -64,19 +64,32 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
         onClick={e => e.stopPropagation()}
       >
-        {/* back button */}
-        <div className="pt-[37px] px-[41px]">
-          <button
-            onClick={handleClose}
-            className="flex items-center gap-[8px] bg-[rgba(255,255,255,0.5)] border border-[#d7d7d7] rounded-full px-[16px] py-[8px] text-[14.865px] font-medium text-black hover:bg-white transition-colors"
-          >
-            <ArrowLeft size={14} />
-            Back
-          </button>
+        <div className="flex flex-row items-center justify-between">
+          {/* back button */}
+          <div className="pt-[37px] px-[41px]">
+            <button
+              onClick={handleClose}
+              className="flex items-center gap-[8px] bg-[rgba(255,255,255,0.5)] border border-[#d7d7d7] rounded-full px-[16px] py-[8px] text-[14.865px] font-medium text-black hover:bg-white transition-colors"
+            >
+              <ArrowLeft size={14} />
+              Back
+            </button>
+          </div>
+
+          {/* save button */}
+          <div className="pt-[37px] px-[41px]">
+            <button
+              //onClick={saveActivity}
+              className="flex items-center gap-[8px] bg-[rgba(255,255,255,0.5)] border border-[#d7d7d7] rounded-full px-[16px] py-[8px] text-[14.865px] font-medium text-black hover:bg-white transition-colors"
+            >
+              <Bookmark size={14} />
+              Save
+            </button>
+          </div>
         </div>
 
         {/* main content: left text + right image */}
-        <div className="flex gap-[41px] px-[41px] pt-[20px] pb-[52px]">
+        <div className="flex gap-[32px] px-[41px] pt-[20px] pb-[52px]">
 
           {/* left: text content */}
           <div className="flex-1 flex flex-col gap-[18px] min-w-0">
@@ -84,31 +97,33 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
               {activity.title}
             </h1>
 
-            {/* category badge */}
-            <div
-                className="flex w-[fit-content] items-center gap-[3.5px] text-white px-[9px] py-[4.5px] rounded-full shadow-[0px_1.68px_1.68px_0px_rgba(0,0,0,0.05)]"
-                style={{ backgroundColor: badgeColor }}
-            >
-                {badgeIcon}
-                <span className="text-[11.5px] font-semibold leading-none">{activity.category}</span>
-            </div>
+            <div className="flex flex-row items-center gap-[16px]">
+              {/* rating + category badge */}
+              <div className="flex items-center gap-[4px]">
+                <span className="text-[#edb721] text-[18px] leading-none">★</span>
+                <span className="text-[16px] font-medium text-black">{activity.rating}</span>
+              </div>
 
-            {/* rating + category badge */}
-            <div className="flex items-center gap-[4px]">
-              <span className="text-[#edb721] text-[18px] leading-none">★</span>
-              <span className="text-[16px] font-medium text-black">{activity.rating}</span>
+              {/* category badge */}
+              <div
+                  className="flex w-[fit-content] items-center gap-[3.5px] text-white px-[10px] py-[5px] rounded-full shadow-[0px_1.68px_1.68px_0px_rgba(0,0,0,0.05)]"
+                  style={{ backgroundColor: badgeColor }}
+              >
+                  {badgeIcon}
+                  <span className="text-[14px] font-semibold leading-none">{activity.category}</span>
+              </div>
             </div>
 
             {/* location */}
             <div className="flex items-center gap-[6px]">
-              <MapPin size={14} className="text-[#a0a3a8] shrink-0" />
-              <span className="text-[14px] text-[#a0a3a8]">{activity.location}</span>
+              <MapPin size={16} className="text-[#a0a3a8] shrink-0" />
+              <span className="text-[16px] text-[#a0a3a8]">{activity.location}</span>
             </div>
 
             {/* attendees */}
             <div className="flex items-center gap-[6px] text-[#a0a3a8]">
-              <Users size={14} />
-              <span className="text-[14px]">{activity.attendeeCount} going</span>
+              <Users size={16} />
+              <span className="text-[16px]">{activity.attendeeCount} going</span>
             </div>
 
             {/* tags */}
@@ -117,7 +132,7 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
                 {activity.tags.map(tag => (
                   <span
                     key={tag}
-                    className="text-[11.8px] font-semibold text-[#323232] bg-[rgba(255,255,255,0.8)] border border-white px-[9px] py-[4.5px] rounded-full"
+                    className="text-[14px] font-semibold text-[#323232] bg-[rgba(255,255,255,0.8)] border border-[rgba(166, 166, 166, 0.8)] px-[10px] py-[5px] rounded-full"
                   >
                     {tag}
                   </span>
