@@ -64,7 +64,7 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-row items-center justify-between w-full">
           {/* back button */}
           <div className="pt-[37px] px-[41px]">
             <button
@@ -76,15 +76,28 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
             </button>
           </div>
 
-          {/* save button */}
-          <div className="pt-[37px] px-[41px]">
-            <button
-              //onClick={saveActivity}
-              className="flex items-center gap-[8px] bg-[rgba(255,255,255,0.5)] border border-[#d7d7d7] rounded-full px-[16px] py-[8px] text-[14.865px] font-medium text-black hover:bg-white transition-colors"
-            >
-              <Bookmark size={14} />
-              Save
-            </button>
+          {/* save + log activity buttons group */}
+          <div className="flex flex-row w-fit-content gap-[12px]">
+            {/* save button */}
+            <div className="pt-[37px]">
+              <button
+                //onClick={saveActivity}
+                className="flex items-center gap-[8px] bg-[rgba(255,255,255,0.5)] border border-[#d7d7d7] rounded-full px-[16px] py-[8px] text-[14.865px] font-medium text-black hover:bg-white transition-colors"
+              >
+                <Bookmark size={14} />
+                Save
+              </button>
+            </div>
+
+            {/* log activity button */}
+            <div className="pt-[37px] pr-[41px]">
+              <button 
+                //onClick={logActivity}
+                className="flex items-center bg-[#1f93cd] px-[16px] py-[8px] text-[#eaf4fa] text-[14.865px] font-medium rounded-full hover:bg-[rgb(21, 115, 166)] transition-colors"
+              >
+                Log
+              </button>
+            </div>
           </div>
         </div>
 
