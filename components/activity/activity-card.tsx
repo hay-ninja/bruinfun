@@ -1,10 +1,12 @@
 // individual card! thanks kai for design so clutch
-import { MapPin, Users, Utensils, Tag, Zap, Calendar, Bookmark } from 'lucide-react'
+import { MapPin, Users, Utensils, Tag, Zap, Calendar } from 'lucide-react'
 import Link from 'next/link'
+import BookmarkButton from '@/components/BookmarkButton'
 
 type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
 
 type ActivityCardProps = {
+  id?: number
   title: string
   rating: number
   location: string
@@ -37,6 +39,7 @@ const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
 }
 
 export default function ActivityCard({
+  id,
   title,
   rating,
   location,
@@ -78,13 +81,11 @@ export default function ActivityCard({
         )}
 
         {/* save button */}
-        <div className="absolute top-[18px] right-[18px]">
-            <button
-              //onClick={saveActivity}
-            >
-              <Bookmark size={20} className="fill-[rgba(10, 10, 10, 0.71)] stroke-white hover:fill-white transition-colors" />
-            </button>
+        {id !== undefined && (
+          <div className="absolute top-[18px] right-[16px]">
+            <BookmarkButton activityId={id} initialBookmarked={isBookmarked} />
           </div>
+        )}
       </div>
 
       {/* everything below the photo */}

@@ -60,11 +60,11 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
       onClick={handleClose}
     >
       <div
-        className={`bg-white rounded-[50px] w-[953px] max-w-[95vw] max-h-[90vh] overflow-y-auto transition-all duration-200 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+        className={`bg-white rounded-[50px] w-[950px] max-w-[95vw] h-[600] max-h-[90vh] overflow-y-auto transition-all duration-200 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex flex-row items-center justify-between w-full">
+        <div className="flex flex-row items-center justify-between w-full bg-white sticky top-0 z-50">
           {/* back button */}
           <div className="pt-[37px] px-[41px]">
             <button
