@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, useCallback } from "react";
 import {
   CheckCircle2,
   ImageIcon,
@@ -179,6 +179,28 @@ export default function LogActivityModal({
     }
   }
 
+  const [show, setShow] = useState(false)
+
+  const handleClose = useCallback(() => {
+    setShow(false)
+    setTimeout(onClose, 200)
+  }, [onClose])
+
+  useEffect(() => {
+    setShow(true)
+    document.body.style.overflow = 'hidden'
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    window.addEventListener('keydown', onKey)
+
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [handleClose])
+
   const needsCreate = !selectedActivity && searched && results.length === 0 && searchQuery.trim().length >= 2;
   const isCreatingNewActivity = needsCreate && !selectedActivity;
   const canLog = Boolean(preSelectedActivity) || Boolean(selectedActivity) || needsCreate;
@@ -190,12 +212,17 @@ export default function LogActivityModal({
   const sectionCls = "grid gap-3 rounded-2xl border border-[rgba(192,199,209,0.6)] bg-[#f8fafc] p-4";
   const labelCls = "text-[13px] font-semibold text-[#6d7783] uppercase tracking-wide";
 
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-[24px] border border-[rgba(192,199,209,0.6)] bg-white shadow-[0px_8px_40px_-4px_rgba(0,0,0,0.15)]">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-200 ${show ? 'opacity-100' : 'opacity-0'}`}
+      style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+      onClick={handleClose}
+    >
+      <div className="bg-white rounded-[50px] w-[950px] max-w-[95vw] h-[600] max-h-[90vh] overflow-y-auto transition-all duration-200 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[rgba(192,199,209,0.5)] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[rgba(192,199,209,0.5)] px-8 pt-5 pb-4 sticky top-0 bg-white z-50">
           <div>
             <h2 className="font-[family-name:var(--font-nunito)] text-[20px] font-semibold text-[#191c20]">
               {preSelectedActivity ? "Complete Activity" : "Log Activity"}
