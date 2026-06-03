@@ -432,8 +432,9 @@ export default function LogActivityModal({
               {error}
             </div>
           )}
+        </form>
 
-          <div className="flex justify-end gap-2 border-t border-[rgba(192,199,209,0.4)] pt-4">
+        <div className="flex justify-end gap-2 pt-4 sticky w-full bottom-0 bg-white z-50 pb-5 px-8 border-t border-[rgba(192,199,209,0.5)]">
             <Button
               type="button"
               variant="ghost"
@@ -447,11 +448,12 @@ export default function LogActivityModal({
               disabled={saving || !canLog}
               className="rounded-full bg-[#1f93cd] text-white hover:bg-[#1a7fb3]"
             >
+              {/*
               {saving ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+              */}
               Submit
             </Button>
           </div>
-        </form>
       </div>
     </div>
   );
