@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { MapPin, Users, Utensils, Tag, Zap, Calendar, ArrowLeft, Bookmark } from 'lucide-react'
 import { type Activity } from '@/lib/mock-activities'
+import ActivityCommentsSection from '@/components/activity/activity-comments-section'
 
 type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
 
@@ -64,7 +65,7 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex flex-row items-center justify-between w-full bg-white sticky top-0 z-50">
+        <div className="pb-2 flex flex-row items-center justify-between w-full bg-white sticky top-0 z-50">
           {/* back button */}
           <div className="pt-[37px] px-[41px]">
             <button
@@ -101,8 +102,9 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
           </div>
         </div>
 
-        {/* main content: left text + right image */}
-        <div className="flex gap-[32px] px-[41px] pt-[20px] pb-[52px]">
+        {/* main content */}
+        <div className="px-[41px] pt-[20px] pb-[52px]">
+        <div className="flex gap-[24px]">
 
           {/* left: text content */}
           <div className="flex-1 flex flex-col gap-[18px] min-w-0">
@@ -164,6 +166,13 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
               />
             </div>
           </div>
+        </div>
+
+        <ActivityCommentsSection
+          activityId={activity.id}
+          initialComments={[]}
+          loadError={false}
+        />
         </div>
       </div>
     </div>
