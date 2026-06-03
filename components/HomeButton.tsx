@@ -8,8 +8,8 @@ export default function HomeButton(){
         <Link href="/" aria-label="Go to Homepage">
             <Image 
                 src="/header/BruinFun.png"
-                width={160}
-                height={100}
+                width={128}
+                height={80}
                 alt="BruinFun Home"
                 className="cursor-pointer hover:opacity-80 transition-opacity"
             />
