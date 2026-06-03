@@ -50,7 +50,7 @@ export default function BookmarkButton({ activityId, initialBookmarked, token }:
     >
       <Bookmark
         size={20}
-        className={bookmarked ? 'fill-blue-600 stroke-blue-600' : 'stroke-gray-500'}
+        className={bookmarked ? 'fill-blue-600 stroke-blue-600' : 'fill-black/20 stroke-white'}
       />
     </button>
   )
