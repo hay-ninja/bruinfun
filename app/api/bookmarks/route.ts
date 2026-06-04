@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 
+// get all bookmarked activity IDs for the current user
+export async function GET(req: NextRequest) {
+    const auth = await getRequestUser(req)
+    if (auth.user === null) {
+        return NextResponse.json({ error: auth.error }, { status: 401 })
+    }
+
+    const { data, error } = await auth.db
+        .from('bookmarks')
+        .select('activity_id')
+        .eq('profile_id', auth.user.id)
+
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ bookmarkedIds: (data ?? []).map((b) => String(b.activity_id)) })
+}
+
 // save an activity to bookmarks
 export async function POST(req: NextRequest) {
 

@@ -77,6 +77,12 @@ export default function ProfilePage() {
     )
 
     const { profile, posted, completed, bookmarks } = data
+
+    async function handleLogout() {
+        await fetch('/api/auth/logout', { method: 'POST' })
+        router.push('/login')
+    }
+    const bookmarkedIds = new Set(bookmarks.map((b) => String(b.activity_id)))
     const tabs: Tab[] = ['posted', 'completed', 'bookmarks']
 
     return (
@@ -85,15 +91,18 @@ export default function ProfilePage() {
             <main className="px-[90px] py-[48px] flex flex-col gap-[32px]">
 
                 {/* name + username */}
-                <div className="flex flex-col gap-[4px]">
-                    <h1 className="font-[family-name:var(--font-nunito)] text-[28px] font-semibold text-[#191c20]">
-                        {profile.first_name} {profile.last_name}
-                    </h1>
-                    <p className="text-[#a0a3a8] text-[15px]">@{profile.username}</p>
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-[4px]">
+                        <h1 className="font-[family-name:var(--font-nunito)] text-[28px] font-semibold text-[#191c20]">
+                            {profile.first_name} {profile.last_name}
+                        </h1>
+                        <p className="text-[#a0a3a8] text-[15px]">@{profile.username}</p>
+                    </div>
+                    
                 </div>
 
                 {/* tab switcher */}
-                <div className="flex gap-[8px] border-b border-[#e0e0e0]">
+                <div className="flex gap-[10px] border-b border-[#e0e0e0]">
                     {tabs.map((t) => (
                         <button key={t} onClick={() => setTab(t)}
                             className={`pb-[12px] px-[4px] text-[15px] font-medium capitalize border-b-2 transition-colors ${
@@ -109,12 +118,14 @@ export default function ProfilePage() {
                 {/* posted */}
                 {tab === 'posted' && (posted.length === 0
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
-                    : <div className="flex flex-wrap gap-[20px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {posted.map((a) => (
-                            <ActivityCard key={a.activity_id} title={a.title} rating={a.avg_rating ?? 0}
+                            <ActivityCard key={a.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
                                 imageUrl={a.image_url}
-                                href={`/activities/${a.activity_id}`} />
+                                href={`/activities/${a.activity_id}`}
+                                isBookmarked={bookmarkedIds.has(String(a.activity_id))}
+                                className="w-full" />
                         ))}
                     </div>
                 )}
@@ -128,10 +139,11 @@ export default function ProfilePage() {
                             if (!a) return null
                             return (
                                 <div key={entry.rating_id} className="flex gap-[16px] items-start">
-                                    <ActivityCard title={a.title} rating={entry.rating}
+                                    <ActivityCard id={String(a.activity_id)} title={a.title} rating={entry.rating}
                                         location={a.location ?? ''} category={a.category as any}
                                         imageUrl={a.image_url}
-                                        href={`/activities/${a.activity_id}`} />
+                                        href={`/activities/${a.activity_id}`}
+                                        isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
                                     <div className="flex flex-col gap-[4px] pt-[8px]">
                                         <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
                                     </div>
@@ -144,16 +156,17 @@ export default function ProfilePage() {
                 {/* bookmarks */}
                 {tab === 'bookmarks' && (bookmarks.length === 0
                     ? <p className="text-[#a0a3a8]">No bookmarks yet.</p>
-                    : <div className="flex flex-wrap gap-[20px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {bookmarks.map((b) => {
                             const a = toActivity(b.activities)
                             if (!a) return null
                             return (
-                                <ActivityCard key={b.activity_id} title={a.title} rating={a.avg_rating ?? 0}
+                                <ActivityCard key={b.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                     location={a.location ?? ''} category={a.category as any}
                                     imageUrl={a.image_url}
                                     href={`/activities/${a.activity_id}`}
-                                    isBookmarked={true} />
+                                    isBookmarked={true}
+                                    className="w-full" />
                             )
                         })}
                     </div>

@@ -39,23 +39,31 @@ export default function PublicProfilePage() {
     const { username } = useParams<{ username: string }>()
     const [tab, setTab] = useState<Tab>('posted')
     const [data, setData] = useState<ProfileData | null>(null)
+    const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
 
     useEffect(() => {
         if (!username) return
-        fetch(`/api/users/${username}`).then(async (res) => {
-            if (res.status === 404) {
+        Promise.all([
+            fetch(`/api/users/${username}`),
+            fetch('/api/bookmarks'),
+        ]).then(async ([profileRes, bookmarksRes]) => {
+            if (profileRes.status === 404) {
                 setError('user not found')
                 setLoading(false)
                 return
             }
-            if (!res.ok) {
+            if (!profileRes.ok) {
                 setError('could not load profile')
                 setLoading(false)
                 return
             }
-            setData(await res.json())
+            setData(await profileRes.json())
+            if (bookmarksRes.ok) {
+                const { bookmarkedIds: ids } = await bookmarksRes.json()
+                setBookmarkedIds(new Set(ids))
+            }
             setLoading(false)
         })
     }, [username])
@@ -102,12 +110,14 @@ export default function PublicProfilePage() {
 
                 {tab === 'posted' && (posted.length === 0
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
-                    : <div className="flex flex-wrap gap-[20px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {posted.map((a) => (
-                            <ActivityCard key={a.activity_id} title={a.title} rating={a.avg_rating ?? 0}
+                            <ActivityCard key={a.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
                                 imageUrl={a.image_url}
-                                href={`/activities/${a.activity_id}`} />
+                                href={`/activities/${a.activity_id}`}
+                                isBookmarked={bookmarkedIds.has(String(a.activity_id))}
+                                className="w-full" />
                         ))}
                     </div>
                 )}
@@ -120,10 +130,11 @@ export default function PublicProfilePage() {
                             if (!a) return null
                             return (
                                 <div key={entry.rating_id} className="flex gap-[16px] items-start">
-                                    <ActivityCard title={a.title} rating={entry.rating}
+                                    <ActivityCard id={String(a.activity_id)} title={a.title} rating={entry.rating}
                                         location={a.location ?? ''} category={a.category as any}
                                         imageUrl={a.image_url}
-                                        href={`/activities/${a.activity_id}`} />
+                                        href={`/activities/${a.activity_id}`}
+                                        isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
                                     <p className="text-[15px] font-medium text-[#191c20] pt-[8px]">{entry.rating} ★</p>
                                 </div>
                             )

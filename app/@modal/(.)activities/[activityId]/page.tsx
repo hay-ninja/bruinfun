@@ -20,10 +20,13 @@ export default async function ActivityModalPage({ params }: PageProps) {
   const validId = toValidActivityId(activityId)
   if (!validId) return null
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   const [
     { data: activity, error },
     { data: comments, error: commentsError },
-    { data: avgResult },
+    { data: ratingsData },
+    { data: bookmarkData },
   ] = await Promise.all([
     supabase
       .from('activities')
@@ -37,14 +40,25 @@ export default async function ActivityModalPage({ params }: PageProps) {
       .order('created_at', { ascending: false }),
     supabase
       .from('ratings')
-      .select('rating.avg()')
-      .eq('activity_id', validId)
-      .single(),
+      .select('rating')
+      .eq('activity_id', validId),
+    user
+      ? supabase
+          .from('bookmarks')
+          .select('activity_id')
+          .eq('profile_id', user.id)
+          .eq('activity_id', validId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
 
   if (error || !activity) return null
 
-  const averageRating = avgResult?.avg != null ? Number(Number(avgResult.avg).toFixed(1)) : null
+  const ratings = (ratingsData ?? []) as { rating: number }[]
+  const attendeeCount = ratings.length > 0 ? ratings.length : undefined
+  const averageRating = ratings.length > 0
+    ? Number((ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length).toFixed(1))
+    : null
 
   const pageActivity = {
     title: activity.title,
@@ -63,6 +77,8 @@ export default async function ActivityModalPage({ params }: PageProps) {
       pageActivity={pageActivity}
       initialComments={initialComments}
       commentsError={Boolean(commentsError)}
+      attendeeCount={attendeeCount}
+      isBookmarked={Boolean(bookmarkData)}
     />
   )
 }
