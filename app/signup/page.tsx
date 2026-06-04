@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function SignupPage() {
     const router = useRouter()
@@ -37,68 +38,82 @@ export default function SignupPage() {
     }
 
     return (
-        <main className="flex items-center justify-center min-h-screen">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
-                <h1 className="text-2xl font-bold">Sign up</h1>
+        <main className="flex items-center justify-center min-h-screen bg-[#fafafa]">
+            <div className="bg-[rgba(235,235,235,0.17)] border border-[rgba(199,199,199,0.33)] rounded-[36px] px-6 py-9 flex flex-col gap-9 items-center w-[362px]">
+                <Image 
+                    src="/header/BruinFun.png"
+                    width={128}
+                    height={80}
+                    alt="BruinFun Home"
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                />
 
-                <div className="flex gap-2">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+                    <div className="border-b border-black/10 w-full">
+                        <div className="flex items-center gap-14 pl-4">
+                            <Link href="/login" className="pb-3 text-[16px] font-medium tracking-[-0.72px] text-black/40">
+                                Log In
+                            </Link>
+                            <span className="-mb-px pb-3 text-[16px] font-medium tracking-[-0.72px] text-black border-b-2 border-black">
+                                Sign Up
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <input
+                            type="text"
+                            placeholder="First name"
+                            value={firstName}
+                            onChange={e => setFirstName(e.target.value)}
+                            required
+                            className="w-1/2 bg-[rgba(120,120,120,0.1)] rounded-full px-4 py-3 text-[16px] text-black placeholder-[#949494] outline-none border-0"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Last name"
+                            value={lastName}
+                            onChange={e => setLastName(e.target.value)}
+                            required
+                            className="w-1/2 bg-[rgba(120,120,120,0.1)] rounded-full px-4 py-3 text-[16px] text-black placeholder-[#949494] outline-none border-0"
+                        />
+                    </div>
                     <input
                         type="text"
-                        placeholder="First name"
-                        value={firstName}
-                        onChange={e => setFirstName(e.target.value)}
+                        placeholder="Username"
+                        value={username}
+                        onChange={e => setUsername(e.target.value)}
                         required
-                        className="border rounded px-3 py-2 w-1/2"
+                        className="w-full bg-[rgba(120,120,120,0.1)] rounded-full px-4 py-3 text-[16px] text-black placeholder-[#949494] outline-none border-0"
                     />
                     <input
-                        type="text"
-                        placeholder="Last name"
-                        value={lastName}
-                        onChange={e => setLastName(e.target.value)}
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
                         required
-                        className="border rounded px-3 py-2 w-1/2"
+                        className="w-full bg-[rgba(120,120,120,0.1)] rounded-full px-4 py-3 text-[16px] text-black placeholder-[#949494] outline-none border-0"
                     />
-                </div>
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    required
-                    className="border rounded px-3 py-2"
-                />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    className="border rounded px-3 py-2"
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    className="border rounded px-3 py-2"
-                />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        required
+                        className="w-full bg-[rgba(120,120,120,0.1)] rounded-full px-4 py-3 text-[16px] text-black placeholder-[#949494] outline-none border-0"
+                    />
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-black text-white rounded px-4 py-2 disabled:opacity-50"
-                >
-                    {loading ? 'Signing up...' : 'Sign up'}
-                </button>
-
-                <p className="text-sm text-center">
-                    Already have an account?{' '}
-                    <Link href="/login" className="underline">Log in</Link>
-                </p>
-            </form>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-[#1f93cd] text-[#eaf4fa] rounded-full py-3 text-18px] font-medium tracking-[-0.72px] disabled:opacity-50"
+                    >
+                        {loading ? 'Signing up...' : 'Sign Up'}
+                    </button>
+                </form>
+            </div>
         </main>
     )
 }
