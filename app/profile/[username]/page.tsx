@@ -110,13 +110,14 @@ export default function PublicProfilePage() {
 
                 {tab === 'posted' && (posted.length === 0
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
-                    : <div className="flex flex-wrap gap-[20px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {posted.map((a) => (
                             <ActivityCard key={a.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
                                 imageUrl={a.image_url}
                                 href={`/activities/${a.activity_id}`}
-                                isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
+                                isBookmarked={bookmarkedIds.has(String(a.activity_id))}
+                                className="w-full" />
                         ))}
                     </div>
                 )}

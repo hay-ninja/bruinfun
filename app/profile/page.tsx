@@ -94,7 +94,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* tab switcher */}
-                <div className="flex gap-[8px] border-b border-[#e0e0e0]">
+                <div className="flex gap-[10px] border-b border-[#e0e0e0]">
                     {tabs.map((t) => (
                         <button key={t} onClick={() => setTab(t)}
                             className={`pb-[12px] px-[4px] text-[15px] font-medium capitalize border-b-2 transition-colors ${
@@ -110,13 +110,14 @@ export default function ProfilePage() {
                 {/* posted */}
                 {tab === 'posted' && (posted.length === 0
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
-                    : <div className="flex flex-wrap gap-[20px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {posted.map((a) => (
                             <ActivityCard key={a.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
                                 imageUrl={a.image_url}
                                 href={`/activities/${a.activity_id}`}
-                                isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
+                                isBookmarked={bookmarkedIds.has(String(a.activity_id))}
+                                className="w-full" />
                         ))}
                     </div>
                 )}
@@ -147,7 +148,7 @@ export default function ProfilePage() {
                 {/* bookmarks */}
                 {tab === 'bookmarks' && (bookmarks.length === 0
                     ? <p className="text-[#a0a3a8]">No bookmarks yet.</p>
-                    : <div className="flex flex-wrap gap-[20px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {bookmarks.map((b) => {
                             const a = toActivity(b.activities)
                             if (!a) return null
@@ -156,7 +157,8 @@ export default function ProfilePage() {
                                     location={a.location ?? ''} category={a.category as any}
                                     imageUrl={a.image_url}
                                     href={`/activities/${a.activity_id}`}
-                                    isBookmarked={true} />
+                                    isBookmarked={true}
+                                    className="w-full" />
                             )
                         })}
                     </div>
