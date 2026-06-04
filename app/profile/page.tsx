@@ -111,7 +111,7 @@ export default function ProfilePage() {
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
                     : <div className="flex flex-wrap gap-[20px]">
                         {posted.map((a) => (
-                            <ActivityCard key={a.activity_id} title={a.title} rating={a.avg_rating ?? 0}
+                            <ActivityCard key={a.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
                                 imageUrl={a.image_url}
                                 href={`/activities/${a.activity_id}`} />
@@ -128,7 +128,7 @@ export default function ProfilePage() {
                             if (!a) return null
                             return (
                                 <div key={entry.rating_id} className="flex gap-[16px] items-start">
-                                    <ActivityCard title={a.title} rating={entry.rating}
+                                    <ActivityCard id={String(a.activity_id)} title={a.title} rating={entry.rating}
                                         location={a.location ?? ''} category={a.category as any}
                                         imageUrl={a.image_url}
                                         href={`/activities/${a.activity_id}`} />
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                             const a = toActivity(b.activities)
                             if (!a) return null
                             return (
-                                <ActivityCard key={b.activity_id} title={a.title} rating={a.avg_rating ?? 0}
+                                <ActivityCard key={b.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                     location={a.location ?? ''} category={a.category as any}
                                     imageUrl={a.image_url}
                                     href={`/activities/${a.activity_id}`}
