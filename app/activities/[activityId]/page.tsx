@@ -15,9 +15,10 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
-export function toValidActivityId(activityId: string): number | null {
-  const parsedId = Number(activityId)
-  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function toValidActivityId(activityId: string): string | null {
+  return UUID_PATTERN.test(activityId) ? activityId : null
 }
 
 export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {

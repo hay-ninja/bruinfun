@@ -5,7 +5,7 @@ import BookmarkButton from '@/components/BookmarkButton'
 import { categoryLabel, type ActivityCategory } from '@/lib/activity-ui'
 
 type ActivityCardProps = {
-  id?: number
+  id?: string
   title: string
   rating: number
   location: string

@@ -22,7 +22,7 @@ type PageActivity = {
 }
 
 type Props = {
-  activityId: number
+  activityId: string
   pageActivity: PageActivity
   initialComments: CommentItem[]
   commentsError: boolean

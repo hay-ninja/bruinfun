@@ -1,7 +1,7 @@
 export type ActivityCategory = 'sports' | 'food' | 'arts' | 'nightlife' | 'outdoors'
 
 export type Activity = {
-  id: number
+  id: string
   title: string
   rating: number
   location: string
@@ -44,8 +44,8 @@ export function categoryLabel(category: ActivityCategory | null | undefined) {
 }
 
 export function mapDbActivityToCard(activity: DbActivity): Activity | null {
-  const id = Number(activity.activity_id)
-  if (!Number.isInteger(id) || id <= 0 || !activity.title) {
+  const id = String(activity.activity_id)
+  if (!id || !activity.title) {
     return null
   }
 
