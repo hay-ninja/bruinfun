@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     // activities this user posted — user FK is profile_id not user_id
     const { data: posted, error: postedError } = await db
         .from('activities')
-        .select('activity_id, title, category, image_url, location, avg_rating, created_at')
+        .select('activity_id, title, category, image_url, location, created_at')
         .eq('profile_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     // activities this user rated, joined with activity details
     const { data: completed, error: completedError } = await db
         .from('ratings')
-        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location, avg_rating)')
+        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location)')
         .eq('profile_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     // bookmarked activities, joined with activity details
     const { data: bookmarks, error: bookmarksError } = await db
         .from('bookmarks')
-        .select('activity_id, activities(activity_id, title, category, image_url, location, avg_rating)')
+        .select('activity_id, activities(activity_id, title, category, image_url, location)')
         .eq('profile_id', user.id)
         .order('created_at', { ascending: false })
 
