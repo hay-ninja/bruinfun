@@ -89,7 +89,7 @@ export default function ActivityDetailOverlay({
       onClick={close}
     >
       <div
-        className={`bg-white rounded-[50px] w-[950px] max-w-[95vw] max-h-[90vh] overflow-y-auto transition-all duration-200 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+        className={`bg-white rounded-[50px] w-[950px] max-w-[95vw] h-[600] max-h-[90vh] overflow-y-auto overscroll-contain transition-all duration-200 ${show ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
         onClick={(e) => e.stopPropagation()}
       >
@@ -114,7 +114,7 @@ export default function ActivityDetailOverlay({
             </div>
             <div className="pt-[37px] pr-[41px]">
               <button className="flex items-center bg-[#1f93cd] px-[16px] py-[8px] text-[#eaf4fa] text-[14.865px] font-medium rounded-full hover:bg-[rgb(21,115,166)] transition-colors">
-                Log
+                Log Activity
               </button>
             </div>
           </div>
@@ -183,8 +183,8 @@ export default function ActivityDetailOverlay({
             </div>
 
             {/* right: image */}
-            <div className="w-[409px] shrink-0">
-              <div className="w-full h-[307px] rounded-[20px] overflow-hidden">
+            <div className="w-[350px] shrink-0">
+              <div className="w-full h-[270px] rounded-[20px] overflow-hidden">
                 {pageActivity.image_url ? (
                   <img
                     src={pageActivity.image_url}
