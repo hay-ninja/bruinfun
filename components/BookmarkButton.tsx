@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Bookmark } from 'lucide-react'
 
 type BookmarkButtonProps = {
-  activityId: number
+  activityId: string
   initialBookmarked: boolean
   token?: string
 }
@@ -14,6 +14,7 @@ export default function BookmarkButton({ activityId, initialBookmarked, token }:
   const [loading, setLoading] = useState(false)
 
   async function handleToggle(e: React.MouseEvent) {
+    e.preventDefault()
     e.stopPropagation()
     if (loading) return
 

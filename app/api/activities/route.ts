@@ -58,13 +58,12 @@ export async function GET(req: NextRequest) {
 
     const category = searchParams.get('category')
     const search = searchParams.get('search')
-    const sort = searchParams.get('sort')
     const cursor = searchParams.get('cursor') // not pages, cursor = ID of last loaded activity to support infinite scrolling like pinterest :D
 
     let query = supabase
     .from('activities')
     .select('*')
-    .order(sort === 'rating' ? 'avg_rating' : 'created_at', {ascending: false})
+    .order('created_at', {ascending: false})
     .limit(25)
 
     if (category) {

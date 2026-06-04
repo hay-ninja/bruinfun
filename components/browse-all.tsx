@@ -3,18 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, Utensils, MapPin, Zap, Tag, Calendar } from 'lucide-react'
 import ActivityCard from './activity/activity-card'
-import { type Activity } from '@/lib/mock-activities'
-
-type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
+import { categoryLabel, type Activity, type ActivityCategory } from '@/lib/activity-ui'
 
 // filter pill config, icon color matches the category badge color
-const FILTERS: { label: string; category: Category | null; icon: React.ReactNode; color: string }[] = [
+const FILTERS: { label: string; category: ActivityCategory | null; icon: React.ReactNode; color: string }[] = [
   { label: 'All Activities', category: null,         icon: null,                   color: '' },
-  { label: 'Product',        category: 'Product',    icon: <Tag      size={12} />, color: '#ff2c55' },
-  { label: 'Restaurant',     category: 'Restaurant', icon: <Utensils size={12} />, color: '#ff9502' },
-  { label: 'Place',          category: 'Place',      icon: <MapPin   size={12} />, color: '#007aff' },
-  { label: 'Service',        category: 'Service',    icon: <Zap      size={12} />, color: '#4bb430' },
-  { label: 'Event',          category: 'Event',      icon: <Calendar size={12} />, color: '#a855f7' },
+  { label: 'Food',           category: 'food',       icon: <Utensils size={12} />, color: '#ff9502' },
+  { label: 'Outdoors',       category: 'outdoors',   icon: <MapPin   size={12} />, color: '#007aff' },
+  { label: 'Sports',         category: 'sports',     icon: <Zap      size={12} />, color: '#4bb430' },
+  { label: 'Arts',           category: 'arts',       icon: <Tag      size={12} />, color: '#a855f7' },
+  { label: 'Nightlife',      category: 'nightlife',  icon: <Calendar size={12} />, color: '#ff2c55' },
 ]
 
 const SORT_OPTIONS = ['Newest', 'Top Rated', 'Most Popular']
@@ -26,7 +24,7 @@ type BrowseAllProps = {
 }
 
 export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null)
+  const [activeCategory, setActiveCategory] = useState<ActivityCategory | null>(null)
   const [sort, setSort]                     = useState('Newest')
   const [showSortMenu, setShowSortMenu]     = useState(false)
   const [visibleCount, setVisibleCount]     = useState(PAGE_SIZE)
@@ -38,8 +36,13 @@ export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
     ? activities.filter(a => a.category === activeCategory)
     : activities
 
-  const visible = filtered.slice(0, visibleCount)
-  const hasMore = visibleCount < filtered.length
+  const sorted = [...filtered].sort((left, right) => {
+    if (sort === 'Top Rated') return right.rating - left.rating
+    if (sort === 'Most Popular') return (right.attendeeCount ?? 0) - (left.attendeeCount ?? 0)
+    return 0
+  })
+  const visible = sorted.slice(0, visibleCount)
+  const hasMore = visibleCount < sorted.length
 
   // when sentinel enters the viewport, load the next batch
   useEffect(() => {
@@ -60,7 +63,7 @@ export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
   }, [hasMore])
 
   // reset visible count when filter changes
-  function handleFilter(category: Category | null) {
+  function handleFilter(category: ActivityCategory | null) {
     setActiveCategory(category)
     setVisibleCount(PAGE_SIZE)
   }
@@ -128,11 +131,22 @@ export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
       </div>
 
       {/* 4 col grid */}
-      <div className="grid grid-cols-4 gap-[28px]">
-        {visible.map(a => (
-          <ActivityCard key={a.id} {...a} className="w-full" onClick={() => onSelect?.(a)} />
-        ))}
-      </div>
+      {visible.length > 0 ? (
+        <div className="grid grid-cols-4 gap-[28px]">
+          {visible.map(a => (
+            <ActivityCard
+              key={a.id}
+              {...a}
+              className="w-full"
+              onClick={onSelect ? () => onSelect(a) : undefined}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[24px] border border-[rgba(192,199,209,0.6)] bg-[rgba(255,255,255,0.5)] px-6 py-8 text-center text-[15px] text-[#6d7783]">
+          No {activeCategory ? categoryLabel(activeCategory).toLowerCase() : 'activities'} yet.
+        </div>
+      )}
 
       {/* sentinel — sits below the grid, invisible, triggers next load when scrolled into view */}
       <div ref={sentinelRef} className="h-px" />

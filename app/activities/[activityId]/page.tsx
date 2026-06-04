@@ -1,8 +1,8 @@
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import CompleteActivityButton from '@/components/CompleteActivityButton'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import ActivityCommentsSection from '@/components/activity/activity-comments-section'
-import { TRENDING, OFF_CAMPUS, ON_CAMPUS } from '@/lib/mock-activities'
 
 type PageProps = {
   params: Promise<{ activityId: string }>
@@ -15,9 +15,10 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
-export function toValidActivityId(activityId: string): number | null {
-  const parsedId = Number(activityId)
-  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i // I LOVE REGEX hahahaha this was fun -hay_ninja
+
+export function toValidActivityId(activityId: string): string | null {
+  return UUID_PATTERN.test(activityId) ? activityId : null
 }
 
 export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {
@@ -47,9 +48,12 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const isLoggedIn = !!user
+
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
     .eq('activity_id', validId)
     .single()
 
@@ -59,9 +63,29 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     .eq('activity_id', validId)
     .order('created_at', { ascending: false })
 
-  const fallbackActivity = [...TRENDING, ...OFF_CAMPUS, ...ON_CAMPUS].find((item) => item.id === validId)
+  let existingRating: number | null = null
+  if (user) {
+    const { data: ratingRow } = await supabase
+      .from('ratings')
+      .select('rating')
+      .eq('activity_id', validId)
+      .eq('profile_id', user.id)
+      .single()
+    existingRating = ratingRow?.rating ?? null
+  }
 
-  if ((error || !activity) && !fallbackActivity) {
+  const { data: activityRatings } = await supabase
+    .from('ratings')
+    .select('rating')
+    .eq('activity_id', validId)
+
+  let averageRating: number | null = null
+  if (activityRatings && activityRatings.length > 0) {
+    const total = activityRatings.reduce((sum, row) => sum + Number(row.rating ?? 0), 0)
+    averageRating = Number((total / activityRatings.length).toFixed(1))
+  }
+
+  if (error || !activity) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
@@ -73,24 +97,6 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
-  const pageActivity = activity
-    ? {
-        title: activity.title,
-        category: activity.category,
-        location: activity.location,
-        avg_rating: activity.avg_rating,
-        image_url: activity.image_url,
-        description: activity.description,
-      }
-    : {
-        title: fallbackActivity!.title,
-        category: fallbackActivity!.category,
-        location: fallbackActivity!.location,
-        avg_rating: fallbackActivity!.rating,
-        image_url: fallbackActivity!.imageUrl,
-        description: null,
-      }
-
   const initialComments = normalizeActivityComments((comments ?? []) as ActivityComment[])
 
   return (
@@ -98,27 +104,36 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
       <Header />
       <main className="px-[90px] py-[48px]">
         <div className="mx-auto max-w-[920px] rounded-[24px] border border-[rgba(192,199,209,0.6)] bg-[rgba(255,255,255,0.7)] p-6 shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.12)]">
-          {pageActivity.image_url ? (
+          {activity.image_url ? (
             <img
-              src={pageActivity.image_url}
-              alt={pageActivity.title}
+              src={activity.image_url}
+              alt={activity.title}
               className="mb-6 h-[360px] w-full rounded-[16px] object-cover"
             />
           ) : null}
 
           <h1 className="font-[family-name:var(--font-nunito)] text-[36px] font-semibold text-[#191c20]">
-            {pageActivity.title}
+            {activity.title}
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6d7783]">
-            <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{pageActivity.category ?? 'uncategorized'}</span>
-            <span>{pageActivity.location ?? 'Location unavailable'}</span>
-            {pageActivity.avg_rating ? <span>{pageActivity.avg_rating} ★</span> : null}
+            <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{activity.category ?? 'uncategorized'}</span>
+            <span>{activity.location ?? 'Location unavailable'}</span>
+            {averageRating != null ? <span>{averageRating} ★</span> : null}
+          </div>
+
+          <div className="mt-4">
+            <CompleteActivityButton
+              activity={activity}
+              isLoggedIn={isLoggedIn}
+              existingRating={existingRating}
+            />
           </div>
 
           <p className="mt-6 whitespace-pre-wrap text-[16px] leading-relaxed text-[#323232]">
-            {pageActivity.description || 'No description available yet for this sample activity.'}
+            {activity.description || 'No description available.'}
           </p>
+
           <ActivityCommentsSection
             activityId={validId}
             initialComments={initialComments}

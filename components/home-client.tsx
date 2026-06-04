@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
+import Header from '@/components/Header'
 import ActivityRow from '@/components/activity/activity-row'
 import BrowseAll from '@/components/browse-all'
-import ActivityDetailModal from '@/components/activity/activity-detail-modal'
-import { type Activity } from '@/lib/mock-activities'
+import Footer from '@/components/Footer'
+import LogActivityModal from '@/components/LogActivityModal'
+import { type Activity } from '@/lib/activity-ui'
 
 type Props = {
   trending: Activity[]
@@ -14,21 +16,27 @@ type Props = {
 }
 
 export default function HomeClient({ trending, offCampus, onCampus, all }: Props) {
-  const [selected, setSelected] = useState<Activity | null>(null)
-  const clearSelected = useCallback(() => setSelected(null), [])
+  const [logModalOpen, setLogModalOpen] = useState(false)
 
   return (
-    <>
-      <main className="px-[90px] py-[48px] flex flex-col gap-[48px]">
-        <ActivityRow title="Trending"   activities={trending}  onSelect={setSelected} />
-        <ActivityRow title="Off-Campus" activities={offCampus} onSelect={setSelected} />
-        <ActivityRow title="On-Campus"  activities={onCampus}  onSelect={setSelected} />
-        <BrowseAll activities={all} onSelect={setSelected} />
-      </main>
+    <div className="min-h-screen bg-white">
+      <Header onLogActivity={() => setLogModalOpen(true)} />
 
-      {selected && (
-        <ActivityDetailModal activity={selected} onClose={clearSelected} />
+      <main className="px-[90px] py-[48px] flex flex-col gap-[48px]">
+        <ActivityRow title="Trending" activities={trending} />
+        <ActivityRow title="Off-Campus" activities={offCampus} />
+        <ActivityRow title="On-Campus" activities={onCampus} />
+        <BrowseAll activities={all} />
+      </main>
+      <Footer />
+
+      {logModalOpen && (
+        <LogActivityModal
+          initialQuery=""
+          onClose={() => setLogModalOpen(false)}
+          onLogged={() => setLogModalOpen(false)}
+        />
       )}
-    </>
+    </div>
   )
 }

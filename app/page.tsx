@@ -1,42 +1,48 @@
-'use client'
-
-import { useState } from 'react'
-import Header from '@/components/Header'
 import HomeClient from '@/components/home-client'
-import Footer from '@/components/Footer'
-import LogActivityModal from '@/components/LogActivityModal'
-import { TRENDING, OFF_CAMPUS, ON_CAMPUS } from '@/lib/mock-activities'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
 
-const ALL_ACTIVITIES = [...TRENDING, ...OFF_CAMPUS, ...ON_CAMPUS]
+export const dynamic = 'force-dynamic'
 
-export default function Home() {
-  const [logModalOpen, setLogModalOpen] = useState(false)
-  const [initialLogQuery, setInitialLogQuery] = useState('')
+export default async function Home() {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('activities')
+    .select('activity_id, title, category, location, image_url, created_at')
+    .order('created_at', { ascending: false })
+    .limit(60)
 
-  function openLogModal() {
-    setInitialLogQuery('')
-    setLogModalOpen(true)
+  if (error) console.error('[homepage] activities fetch error:', error.message)
+
+  const activityIds = ((data ?? []) as DbActivity[]).map((a) => a.activity_id)
+  const { data: ratings } = activityIds.length > 0
+    ? await supabase
+        .from('ratings')
+        .select('activity_id, rating')
+        .in('activity_id', activityIds)
+    : { data: [] }
+
+  const ratingTotals = new Map<string, { total: number; count: number }>()
+  for (const r of (ratings ?? []) as { activity_id: string | number; rating: number }[]) {
+    const key = String(r.activity_id)
+    const current = ratingTotals.get(key) ?? { total: 0, count: 0 }
+    current.total += Number(r.rating ?? 0)
+    current.count += 1
+    ratingTotals.set(key, current)
   }
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Header onLogActivity={() => setLogModalOpen(true)} />
+  const activities = ((data ?? []) as DbActivity[])
+    .map((activity) => {
+      const r = ratingTotals.get(String(activity.activity_id))
+      return {
+        ...activity,
+        avg_rating: r && r.count > 0 ? Number((r.total / r.count).toFixed(1)) : 0,
+      }
+    })
+    .map(mapDbActivityToCard)
+    .filter((activity): activity is Activity => activity !== null)
 
-      <HomeClient
-        trending={TRENDING}
-        offCampus={OFF_CAMPUS}
-        onCampus={ON_CAMPUS}
-        all={ALL_ACTIVITIES}
-      />
-      <Footer />
+  const sections = splitHomepageActivities(activities)
 
-      {logModalOpen && (
-        <LogActivityModal
-          initialQuery=""
-          onClose={() => setLogModalOpen(false)}
-          onLogged={() => setLogModalOpen(false)}
-        />
-      )}
-    </div>
-  )
+  return <HomeClient {...sections} />
 }

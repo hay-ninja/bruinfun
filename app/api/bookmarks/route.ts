@@ -13,13 +13,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { activity_id } = body
 
-    if (!activity_id || typeof activity_id !== 'number') {
+    if (!activity_id || (typeof activity_id !== 'number' && typeof activity_id !== 'string')) {
         return NextResponse.json({ error: 'activity_id is required' }, { status: 400 })
     }
 
     const { data, error } = await auth.db
         .from('bookmarks')
-        .insert({ user_id: user.id, activity_id })
+        .insert({ profile_id: user.id, activity_id })
         .select()
         .single()
 
@@ -46,7 +46,7 @@ export async function DELETE(req: NextRequest) {
     const body = await req.json()
     const { activity_id } = body
 
-    if (!activity_id || typeof activity_id !== 'number') {
+    if (!activity_id || (typeof activity_id !== 'number' && typeof activity_id !== 'string')) {
         return NextResponse.json({ error: 'activity_id is required' }, { status: 400 })
     }
 
@@ -54,7 +54,7 @@ export async function DELETE(req: NextRequest) {
     const { error } = await auth.db
         .from('bookmarks')
         .delete()
-        .eq('user_id', user.id)
+        .eq('profile_id', user.id)
         .eq('activity_id', activity_id)
 
     if (error) {

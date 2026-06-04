@@ -2,17 +2,16 @@
 import { MapPin, Users, Utensils, Tag, Zap, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import BookmarkButton from '@/components/BookmarkButton'
-
-type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
+import { categoryLabel, type ActivityCategory } from '@/lib/activity-ui'
 
 type ActivityCardProps = {
-  id?: number
+  id?: string
   title: string
   rating: number
   location: string
-  imageUrl: string
+  imageUrl?: string | null
   href?: string
-  category?: Category
+  category?: ActivityCategory | null
   attendeeCount?: number
   tags?: string[]
   isBookmarked?: boolean
@@ -21,21 +20,21 @@ type ActivityCardProps = {
 }
 
 // badge color per category, pulled directly from figma thx kai :D
-const CATEGORY_COLORS: Record<Category, string> = {
-  Restaurant: '#ff9502',
-  Place:      '#007aff',
-  Service:    '#4bb430',
-  Product:    '#ff2c55',
-  Event:      '#a855f7',
+const CATEGORY_COLORS: Record<ActivityCategory, string> = {
+  food: '#ff9502',
+  outdoors: '#007aff',
+  sports: '#4bb430',
+  arts: '#a855f7',
+  nightlife: '#ff2c55',
 }
 
 // tentative icon per category for the badge from lucide
-const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
-  Restaurant: <Utensils size={10} strokeWidth={2.5} />,
-  Place:      <MapPin   size={10} strokeWidth={2.5} />,
-  Service:    <Zap      size={10} strokeWidth={2.5} />,
-  Product:    <Tag      size={10} strokeWidth={2.5} />,
-  Event:      <Calendar size={10} strokeWidth={2.5} />,
+const CATEGORY_ICONS: Record<ActivityCategory, React.ReactNode> = {
+  food: <Utensils size={10} strokeWidth={2.5} />,
+  outdoors: <MapPin size={10} strokeWidth={2.5} />,
+  sports: <Zap size={10} strokeWidth={2.5} />,
+  arts: <Tag size={10} strokeWidth={2.5} />,
+  nightlife: <Calendar size={10} strokeWidth={2.5} />,
 }
 
 export default function ActivityCard({
@@ -62,12 +61,18 @@ export default function ActivityCard({
   const card = (
     <div
       onClick={onClick}
-      className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-2px_rgba(0,0,0,0.2)] transition-shadow ${onClick ? 'cursor-pointer hover:shadow-[0px_4px_24px_-1px_rgba(0,0,0,0.25)]' : ''} ${className}`}
+      className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-2px_rgba(0,0,0,0.2)] transition-shadow ${hoverClass} ${onClick ? 'cursor-pointer hover:shadow-[0px_4px_24px_-1px_rgba(0,0,0,0.25)]' : ''} ${className}`}
     >
 
       {/* photo with badge + bookmark overlaid */}
       <div className="relative h-[163px] overflow-hidden">
-        <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+        {imageUrl ? (
+          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[#dff3fb] px-6 text-center font-[family-name:var(--font-nunito)] text-[18px] font-semibold text-[#1f93cd]">
+            {title}
+          </div>
+        )}
 
         {/* category badge top left */}
         {category && (
@@ -76,7 +81,7 @@ export default function ActivityCard({
             style={{ backgroundColor: badgeColor }}
           >
             {badgeIcon}
-            <span className="text-[11.5px] font-semibold leading-none">{category}</span>
+            <span className="text-[11.5px] font-semibold capitalize leading-none">{categoryLabel(category)}</span>
           </div>
         )}
 
