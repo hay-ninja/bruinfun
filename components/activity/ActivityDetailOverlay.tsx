@@ -47,6 +47,7 @@ type Props = {
   attendeeCount?: number
   tags?: string[]
   isBookmarked?: boolean
+  isLoggedIn?: boolean
 }
 
 export default function ActivityDetailOverlay({
@@ -57,6 +58,7 @@ export default function ActivityDetailOverlay({
   attendeeCount,
   tags,
   isBookmarked = false,
+  isLoggedIn = true,
 }: Props) {
   const router = useRouter()
   const [show, setShow] = useState(false)
@@ -212,6 +214,7 @@ export default function ActivityDetailOverlay({
             activityId={activityId}
             initialComments={initialComments}
             loadError={commentsError}
+            isLoggedIn={isLoggedIn}
           />
         </div>
       </div>
