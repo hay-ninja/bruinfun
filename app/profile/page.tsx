@@ -77,6 +77,11 @@ export default function ProfilePage() {
     )
 
     const { profile, posted, completed, bookmarks } = data
+
+    async function handleLogout() {
+        await fetch('/api/auth/logout', { method: 'POST' })
+        router.push('/login')
+    }
     const bookmarkedIds = new Set(bookmarks.map((b) => String(b.activity_id)))
     const tabs: Tab[] = ['posted', 'completed', 'bookmarks']
 
@@ -86,11 +91,14 @@ export default function ProfilePage() {
             <main className="px-[90px] py-[48px] flex flex-col gap-[32px]">
 
                 {/* name + username */}
-                <div className="flex flex-col gap-[4px]">
-                    <h1 className="font-[family-name:var(--font-nunito)] text-[28px] font-semibold text-[#191c20]">
-                        {profile.first_name} {profile.last_name}
-                    </h1>
-                    <p className="text-[#a0a3a8] text-[15px]">@{profile.username}</p>
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-[4px]">
+                        <h1 className="font-[family-name:var(--font-nunito)] text-[28px] font-semibold text-[#191c20]">
+                            {profile.first_name} {profile.last_name}
+                        </h1>
+                        <p className="text-[#a0a3a8] text-[15px]">@{profile.username}</p>
+                    </div>
+                    
                 </div>
 
                 {/* tab switcher */}
