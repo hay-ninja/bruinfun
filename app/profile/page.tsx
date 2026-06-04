@@ -138,21 +138,19 @@ export default function ProfilePage() {
                 {/* completed - show rating next to card */}
                 {tab === 'completed' && (completed.length === 0
                     ? <p className="text-[#a0a3a8]">No completed activities yet.</p>
-                    : <div className="flex flex-col gap-[16px]">
+                    : <div className="grid grid-cols-4 gap-[28px]">
                         {completed.map((entry) => {
                             const a = toActivity(entry.activities)
                             if (!a) return null
                             return (
-                                <div key={entry.rating_id} className="flex gap-[16px] items-start">
-                                    <ActivityCard id={String(a.activity_id)} title={a.title} rating={entry.rating}
-                                        location={a.location ?? ''} category={a.category as any}
-                                        imageUrl={a.image_url}
-                                        href={`/activities/${a.activity_id}`}
-                                        isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
-                                    <div className="flex flex-col gap-[4px] pt-[8px]">
-                                        <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
-                                    </div>
-                                </div>
+                                <ActivityCard key={entry.rating_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
+                                    location={a.location ?? ''} category={a.category as any}
+                                    imageUrl={a.image_url}
+                                    href={`/activities/${a.activity_id}`}
+                                    isBookmarked={bookmarkedIds.has(String(a.activity_id))}
+                                    variant="completed"
+                                    userRating={entry.rating}
+                                    className="w-full" />
                             )
                         })}
                     </div>

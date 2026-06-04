@@ -4,6 +4,8 @@ import Link from 'next/link'
 import BookmarkButton from '@/components/BookmarkButton'
 import { categoryLabel, type ActivityCategory } from '@/lib/activity-ui'
 
+type ActivityCardVariant = 'default' | 'completed'
+
 type ActivityCardProps = {
   id?: string
   title: string
@@ -17,6 +19,8 @@ type ActivityCardProps = {
   isBookmarked?: boolean
   className?: string
   onClick?: () => void
+  variant?: ActivityCardVariant
+  userRating?: number
 }
 
 // badge color per category, pulled directly from figma thx kai :D
@@ -50,6 +54,8 @@ export default function ActivityCard({
   isBookmarked = false,
   className = '',
   onClick,
+  variant = 'default',
+  userRating,
 }: ActivityCardProps) {
   // grab the right color + icon for the badge
   const badgeColor = category ? CATEGORY_COLORS[category] : '#007aff'
@@ -115,6 +121,14 @@ export default function ActivityCard({
               {location}
             </span>
           </div>
+
+          {/* here is the completed variant only used on the completed section of the profile page */}
+          {variant === 'completed' && userRating !== undefined && (
+            <div className="flex items-center gap-[3px]">
+              <span className="text-[13px] font-regular text-[#191c20]">Your rating: {userRating}</span>
+              <span className="text-[#edb721] text-[13px]">★</span>
+            </div>
+          )}
         </div>
 
         {/* attendees + tags, skipped if both are empty */}
