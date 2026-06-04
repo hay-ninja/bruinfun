@@ -53,5 +53,63 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: bookmarksError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ profile, posted, completed: completed ?? [], bookmarks })
+    // compute the average rating per activity (same approach as the homepage)
+    // gather every activity_id shown across the posted + bookmark tabs
+    const postedList = posted ?? []
+    const bookmarkList = bookmarks ?? []
+    const completedList = completed ?? []
+    const allIds = [
+        ...postedList.map((a: any) => a.activity_id),
+        ...bookmarkList.map((b: any) => b.activities?.activity_id).filter(Boolean),
+        ...completedList.map((c: any) => c.activities?.activity_id).filter(Boolean),
+    ]
+
+    const avgById = new Map<string, number>()
+    if (allIds.length > 0) {
+        const { data: allRatings } = await db
+            .from('ratings')
+            .select('activity_id, rating')
+            .in('activity_id', allIds)
+
+        const totals = new Map<string, { total: number; count: number }>()
+        for (const r of (allRatings ?? []) as { activity_id: string | number; rating: number }[]) {
+            const key = String(r.activity_id)
+            const cur = totals.get(key) ?? { total: 0, count: 0 }
+            cur.total += Number(r.rating ?? 0)
+            cur.count += 1
+            totals.set(key, cur)
+        }
+        for (const [key, { total, count }] of totals) {
+            avgById.set(key, count > 0 ? Number((total / count).toFixed(1)) : 0)
+        }
+    }
+
+    // stamp avg_rating onto posted activities
+    const postedWithAvg = postedList.map((a: any) => ({
+        ...a,
+        avg_rating: avgById.get(String(a.activity_id)) ?? 0,
+    }))
+
+    // stamp avg_rating onto the joined activity inside each bookmark
+    const bookmarksWithAvg = bookmarkList.map((b: any) => ({
+        ...b,
+        activities: b.activities
+            ? { ...b.activities, avg_rating: avgById.get(String(b.activities.activity_id)) ?? 0 }
+            : b.activities,
+    }))
+
+    // stamp avg_rating onto the joined activity inside each completed entry
+    const completedWithAvg = completedList.map((c: any) => ({
+        ...c,
+        activities: c.activities
+            ? { ...c.activities, avg_rating: avgById.get(String(c.activities.activity_id)) ?? 0 }
+            : c.activities,
+    }))
+
+    return NextResponse.json({
+        profile,
+        posted: postedWithAvg,
+        completed: completedWithAvg,
+        bookmarks: bookmarksWithAvg,
+    })
 }
