@@ -13,6 +13,7 @@ type ActivityCommentsSectionProps = {
   activityId: string
   initialComments: ActivityCommentItem[]
   loadError: boolean
+  isLoggedIn?: boolean
 }
 
 type RatingResponse = {
@@ -41,6 +42,7 @@ export default function ActivityCommentsSection({
   activityId,
   initialComments,
   loadError,
+  isLoggedIn = true,
 }: ActivityCommentsSectionProps) {
   const [comments, setComments] = useState<ActivityCommentItem[]>(initialComments)
   const [ratingInput, setRatingInput] = useState('8')
@@ -117,6 +119,13 @@ export default function ActivityCommentsSection({
     <section className="mt-8 border-t border-[rgba(192,199,209,0.6)] pt-6">
       <h2 className="font-[family-name:var(--font-nunito)] text-[24px] font-semibold text-[#191c20]">Ratings</h2>
 
+      {!isLoggedIn ? (
+        <div className="mt-4 rounded-xl border border-[rgba(192,199,209,0.6)] bg-white/80 p-4">
+          <p className="text-[15px] text-[#6d7783]">
+            Please <a href="/login" className="text-[#1f93cd] underline">log in</a> to leave a rating or comment.
+          </p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="mt-4 rounded-xl border border-[rgba(192,199,209,0.6)] bg-white/80 p-4">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <label htmlFor="activity-rating" className="text-[14px] font-medium text-[#323232]">Your rating</label>
@@ -164,6 +173,7 @@ export default function ActivityCommentsSection({
           </button>
         </div>
       </form>
+      )}
 
       {loadError ? (
         <p className="mt-4 text-[15px] text-red-500">Could not load existing comments right now.</p>
