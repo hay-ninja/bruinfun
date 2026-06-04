@@ -15,9 +15,15 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
-export function toValidActivityId(activityId: string): number | null {
-  const parsedId = Number(activityId)
-  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+export function toValidActivityId(activityId: string): string | null {
+  const trimmed = activityId.trim()
+  if (!trimmed) return null
+
+  const parsedId = Number(trimmed)
+  if (Number.isInteger(parsedId) && parsedId > 0) return trimmed
+
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidPattern.test(trimmed) ? trimmed : null
 }
 
 export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {
@@ -52,7 +58,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
 
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
     .eq('activity_id', validId)
     .single()
 
@@ -63,6 +69,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     .order('created_at', { ascending: false })
 
   let existingRating: number | null = null
+  let averageRating: number | null = null
   if (user) {
     const { data: ratingRow } = await supabase
       .from('ratings')
@@ -71,6 +78,16 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
       .eq('profile_id', user.id)
       .single()
     existingRating = ratingRow?.rating ?? null
+  }
+
+  const { data: activityRatings } = await supabase
+    .from('ratings')
+    .select('rating')
+    .eq('activity_id', validId)
+
+  if (activityRatings && activityRatings.length > 0) {
+    const total = activityRatings.reduce((sum, row) => sum + Number(row.rating ?? 0), 0)
+    averageRating = Number((total / activityRatings.length).toFixed(1))
   }
 
   if (error || !activity) {
@@ -107,7 +124,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6d7783]">
             <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{activity.category ?? 'uncategorized'}</span>
             <span>{activity.location ?? 'Location unavailable'}</span>
-            {activity.avg_rating ? <span>{activity.avg_rating} ★</span> : null}
+            {averageRating != null ? <span>{averageRating} ★</span> : null}
           </div>
 
           <div className="mt-4">

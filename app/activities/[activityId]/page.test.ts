@@ -3,8 +3,12 @@ import { normalizeActivityComments, toValidActivityId } from './page'
 
 describe('activity detail helpers', () => {
   describe('toValidActivityId', () => {
-    it('returns positive integer IDs', () => {
-      expect(toValidActivityId('42')).toBe(42)
+    it('returns positive integer IDs as strings', () => {
+      expect(toValidActivityId('42')).toBe('42')
+    })
+
+    it('returns UUID activity IDs', () => {
+      expect(toValidActivityId('9acb51f8-75a6-4796-9ff1-e6ebcbc8160f')).toBe('9acb51f8-75a6-4796-9ff1-e6ebcbc8160f')
     })
 
     it('rejects non-numeric and non-positive values', () => {

@@ -39,7 +39,7 @@ export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
   const sorted = [...filtered].sort((left, right) => {
     if (sort === 'Top Rated') return right.rating - left.rating
     if (sort === 'Most Popular') return (right.attendeeCount ?? 0) - (left.attendeeCount ?? 0)
-    return right.id - left.id
+    return 0
   })
   const visible = sorted.slice(0, visibleCount)
   const hasMore = visibleCount < sorted.length

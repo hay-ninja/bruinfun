@@ -22,7 +22,7 @@ export default async function ActivityModalPage({ params }: PageProps) {
 
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
     .eq('activity_id', validId)
     .single()
 
@@ -34,11 +34,20 @@ export default async function ActivityModalPage({ params }: PageProps) {
 
   if (error || !activity) return null
 
+  const { data: activityRatings } = await supabase
+    .from('ratings')
+    .select('rating')
+    .eq('activity_id', validId)
+
+  const averageRating = activityRatings && activityRatings.length > 0
+    ? Number((activityRatings.reduce((sum, row) => sum + Number(row.rating ?? 0), 0) / activityRatings.length).toFixed(1))
+    : null
+
   const pageActivity = {
     title: activity.title,
     category: activity.category,
     location: activity.location,
-    avg_rating: activity.avg_rating,
+    avg_rating: averageRating,
     image_url: activity.image_url,
     description: activity.description,
   }

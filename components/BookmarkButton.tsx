@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Bookmark } from 'lucide-react'
 
 type BookmarkButtonProps = {
-  activityId: number
+  activityId: string | number
   initialBookmarked: boolean
   token?: string
 }

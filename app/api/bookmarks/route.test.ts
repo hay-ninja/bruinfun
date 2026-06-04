@@ -64,22 +64,31 @@ describe('POST /api/bookmarks', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 400 when activity_id is not a number', async () => {
+  it('accepts string activity IDs', async () => {
+    const from = vi.fn().mockReturnValue({
+      insert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({ data: { profile_id: mockUser.id, activity_id: 'activity-uuid', created_at: '2026-05-20' }, error: null }),
+        }),
+      }),
+    })
+
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(vi.fn()),
+      db: makeAuthDb(from),
       error: null,
     })
 
-    const res = await POST(makeRequest('POST', { activity_id: 'abc' }, 'valid-token'))
-    expect(res.status).toBe(400)
+    const res = await POST(makeRequest('POST', { activity_id: 'activity-uuid' }, 'valid-token'))
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({ profile_id: mockUser.id, activity_id: 'activity-uuid' })
   })
 
   it('returns 201 on success', async () => {
     const from = vi.fn().mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { user_id: mockUser.id, activity_id: 1, created_at: '2026-05-20' }, error: null }),
+          single: vi.fn().mockResolvedValue({ data: { profile_id: mockUser.id, activity_id: 1, created_at: '2026-05-20' }, error: null }),
         }),
       }),
     })
@@ -92,7 +101,7 @@ describe('POST /api/bookmarks', () => {
 
     const res = await POST(makeRequest('POST', { activity_id: 1 }, 'valid-token'))
     expect(res.status).toBe(201)
-    expect(await res.json()).toMatchObject({ user_id: mockUser.id, activity_id: 1 })
+    expect(await res.json()).toMatchObject({ profile_id: mockUser.id, activity_id: 1 })
   })
 
   it('returns 409 when already bookmarked', async () => {

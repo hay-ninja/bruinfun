@@ -1,7 +1,7 @@
 export type ActivityCategory = 'sports' | 'food' | 'arts' | 'nightlife' | 'outdoors'
 
 export type Activity = {
-  id: number
+  id: string
   title: string
   rating: number
   location: string
@@ -19,7 +19,8 @@ export type DbActivity = {
   category: string | null
   location: string | null
   image_url: string | null
-  avg_rating: number | null
+  created_at?: string | null
+  avg_rating?: number | null
 }
 
 const campusLocationPattern = /ucla|ackerman|powell|janss|royce|bruin|de neve|sunset|westwood|wooden|kerckhoff|schoenberg|anderson|boelter/i
@@ -44,8 +45,8 @@ export function categoryLabel(category: ActivityCategory | null | undefined) {
 }
 
 export function mapDbActivityToCard(activity: DbActivity): Activity | null {
-  const id = Number(activity.activity_id)
-  if (!Number.isInteger(id) || id <= 0 || !activity.title) {
+  const id = String(activity.activity_id ?? '').trim()
+  if (!id || !activity.title) {
     return null
   }
 

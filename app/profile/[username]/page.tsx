@@ -14,7 +14,7 @@ type Activity = {
     category: string | null
     image_url: string | null
     location: string | null
-    avg_rating: number | null
+    avg_rating?: number | null
 }
 
 type CompletedEntry = {

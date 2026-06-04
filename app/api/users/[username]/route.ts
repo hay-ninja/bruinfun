@@ -22,7 +22,7 @@ export async function GET(
     // their posted activities
     const { data: posted, error: postedError } = await supabase
         .from('activities')
-        .select('activity_id, title, category, image_url, location, avg_rating, created_at')
+        .select('activity_id, title, category, image_url, location, created_at')
         .eq('profile_id', profile.profile_id)
         .order('created_at', { ascending: false })
 
@@ -33,7 +33,7 @@ export async function GET(
     // their completed activities
     const { data: completed, error: completedError } = await supabase
         .from('ratings')
-        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location, avg_rating)')
+        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location)')
         .eq('profile_id', profile.profile_id)
         .order('created_at', { ascending: false })
 

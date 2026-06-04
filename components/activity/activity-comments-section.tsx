@@ -10,7 +10,7 @@ type ActivityCommentItem = {
 }
 
 type ActivityCommentsSectionProps = {
-  activityId: number
+  activityId: string | number
   initialComments: ActivityCommentItem[]
   loadError: boolean
 }
