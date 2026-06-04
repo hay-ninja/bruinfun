@@ -77,6 +77,7 @@ export default function ProfilePage() {
     )
 
     const { profile, posted, completed, bookmarks } = data
+    const bookmarkedIds = new Set(bookmarks.map((b) => String(b.activity_id)))
     const tabs: Tab[] = ['posted', 'completed', 'bookmarks']
 
     return (
@@ -114,7 +115,8 @@ export default function ProfilePage() {
                             <ActivityCard key={a.activity_id} id={String(a.activity_id)} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
                                 imageUrl={a.image_url}
-                                href={`/activities/${a.activity_id}`} />
+                                href={`/activities/${a.activity_id}`}
+                                isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
                         ))}
                     </div>
                 )}
@@ -131,7 +133,8 @@ export default function ProfilePage() {
                                     <ActivityCard id={String(a.activity_id)} title={a.title} rating={entry.rating}
                                         location={a.location ?? ''} category={a.category as any}
                                         imageUrl={a.image_url}
-                                        href={`/activities/${a.activity_id}`} />
+                                        href={`/activities/${a.activity_id}`}
+                                        isBookmarked={bookmarkedIds.has(String(a.activity_id))} />
                                     <div className="flex flex-col gap-[4px] pt-[8px]">
                                         <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
                                     </div>

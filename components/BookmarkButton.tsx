@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bookmark } from 'lucide-react'
 
 type BookmarkButtonProps = {
@@ -23,9 +23,24 @@ const VARIANTS = {
   },
 }
 
+const BOOKMARK_EVENT = 'bookmark-change'
+
+function broadcast(activityId: string, bookmarked: boolean) {
+  window.dispatchEvent(new CustomEvent(BOOKMARK_EVENT, { detail: { activityId, bookmarked } }))
+}
+
 export default function BookmarkButton({ activityId, initialBookmarked, token, variant = 'card' }: BookmarkButtonProps) {
   const [bookmarked, setBookmarked] = useState(initialBookmarked)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    function onBookmarkChange(e: Event) {
+      const { activityId: id, bookmarked: next } = (e as CustomEvent<{ activityId: string; bookmarked: boolean }>).detail
+      if (id === activityId) setBookmarked(next)
+    }
+    window.addEventListener(BOOKMARK_EVENT, onBookmarkChange)
+    return () => window.removeEventListener(BOOKMARK_EVENT, onBookmarkChange)
+  }, [activityId])
 
   async function handleToggle(e: React.MouseEvent) {
     e.preventDefault()
@@ -33,7 +48,9 @@ export default function BookmarkButton({ activityId, initialBookmarked, token, v
     if (loading) return
 
     const prev = bookmarked
-    setBookmarked(!prev) // optimistic update
+    const next = !prev
+    setBookmarked(next)
+    broadcast(activityId, next)
     setLoading(true)
 
     try {
@@ -47,10 +64,12 @@ export default function BookmarkButton({ activityId, initialBookmarked, token, v
       })
 
       if (!res.ok) {
-        setBookmarked(prev) // revert if something went wrong
+        setBookmarked(prev)
+        broadcast(activityId, prev)
       }
     } catch (err) {
-      setBookmarked(prev) // revert on network error
+      setBookmarked(prev)
+      broadcast(activityId, prev)
       console.error(err)
     } finally {
       setLoading(false)
