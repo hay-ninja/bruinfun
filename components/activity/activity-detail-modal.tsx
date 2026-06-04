@@ -138,7 +138,7 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
             {/* attendees */}
             <div className="flex items-center gap-[6px] text-[#a0a3a8]">
               <Users size={16} />
-              <span className="text-[16px]">{activity.attendeeCount} going</span>
+              <span className="text-[16px]">{activity.attendeeCount} experienced</span>
             </div>
 
             {/* tags */}
