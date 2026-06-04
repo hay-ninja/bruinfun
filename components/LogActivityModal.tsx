@@ -241,7 +241,7 @@ export default function LogActivityModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-4 px-6 py-5">
+        <form id="log-activity-form" onSubmit={handleSubmit} className="grid gap-4 px-6 py-5">
 
           {/* Search / selected activity (hidden when pre-selected) */}
           {!preSelectedActivity && (
@@ -445,6 +445,7 @@ export default function LogActivityModal({
             </Button>
             <Button
               type="submit"
+              form="log-activity-form"
               disabled={saving || !canLog}
               className="rounded-full bg-[#1f93cd] text-white hover:bg-[#1a7fb3]"
             >
