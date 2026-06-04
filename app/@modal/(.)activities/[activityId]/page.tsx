@@ -20,10 +20,13 @@ export default async function ActivityModalPage({ params }: PageProps) {
   const validId = toValidActivityId(activityId)
   if (!validId) return null
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   const [
     { data: activity, error },
     { data: comments, error: commentsError },
     { data: ratingsData },
+    { data: bookmarkData },
   ] = await Promise.all([
     supabase
       .from('activities')
@@ -39,6 +42,14 @@ export default async function ActivityModalPage({ params }: PageProps) {
       .from('ratings')
       .select('rating')
       .eq('activity_id', validId),
+    user
+      ? supabase
+          .from('bookmarks')
+          .select('activity_id')
+          .eq('profile_id', user.id)
+          .eq('activity_id', validId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
 
   if (error || !activity) return null
@@ -67,6 +78,7 @@ export default async function ActivityModalPage({ params }: PageProps) {
       initialComments={initialComments}
       commentsError={Boolean(commentsError)}
       attendeeCount={attendeeCount}
+      isBookmarked={Boolean(bookmarkData)}
     />
   )
 }

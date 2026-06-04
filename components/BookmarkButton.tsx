@@ -7,9 +7,23 @@ type BookmarkButtonProps = {
   activityId: string
   initialBookmarked: boolean
   token?: string
+  variant?: 'card' | 'overlay'
 }
 
-export default function BookmarkButton({ activityId, initialBookmarked, token }: BookmarkButtonProps) {
+const VARIANTS = {
+  card: {
+    size: 20,
+    active: 'fill-blue-600 stroke-blue-600',
+    inactive: 'fill-black/20 stroke-white hover:fill-black/40',
+  },
+  overlay: {
+    size: 24,
+    active: 'fill-blue-600 stroke-blue-600',
+    inactive: 'fill-transparent stroke-black hover:fill-black/10',
+  },
+}
+
+export default function BookmarkButton({ activityId, initialBookmarked, token, variant = 'card' }: BookmarkButtonProps) {
   const [bookmarked, setBookmarked] = useState(initialBookmarked)
   const [loading, setLoading] = useState(false)
 
@@ -46,12 +60,12 @@ export default function BookmarkButton({ activityId, initialBookmarked, token }:
   return (
     <button
       onClick={handleToggle}
-      disabled={loading}
       aria-label={bookmarked ? 'Remove bookmark' : 'Save bookmark'}
+      className={loading ? 'opacity-50 cursor-wait' : ''}
     >
       <Bookmark
-        size={20}
-        className={bookmarked ? 'fill-blue-600 stroke-blue-600' : 'fill-black/20 stroke-white hover:fill-black/40'}
+        size={VARIANTS[variant].size}
+        className={bookmarked ? VARIANTS[variant].active : VARIANTS[variant].inactive}
       />
     </button>
   )

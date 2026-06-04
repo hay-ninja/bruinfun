@@ -6,21 +6,38 @@ export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from('activities')
-    .select('activity_id, title, category, location, image_url, created_at')
-    .order('created_at', { ascending: false })
-    .limit(60)
+
+  const [{ data, error }, { data: { user } }] = await Promise.all([
+    supabase
+      .from('activities')
+      .select('activity_id, title, category, location, image_url, created_at')
+      .order('created_at', { ascending: false })
+      .limit(60),
+    supabase.auth.getUser(),
+  ])
 
   if (error) console.error('[homepage] activities fetch error:', error.message)
 
   const activityIds = ((data ?? []) as DbActivity[]).map((a) => a.activity_id)
-  const { data: ratings } = activityIds.length > 0
-    ? await supabase
-        .from('ratings')
-        .select('activity_id, rating')
-        .in('activity_id', activityIds)
-    : { data: [] }
+
+  const [{ data: ratings }, { data: bookmarkData }] = await Promise.all([
+    activityIds.length > 0
+      ? supabase
+          .from('ratings')
+          .select('activity_id, rating')
+          .in('activity_id', activityIds)
+      : Promise.resolve({ data: [] }),
+    user
+      ? supabase
+          .from('bookmarks')
+          .select('activity_id')
+          .eq('profile_id', user.id)
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const bookmarkedIds = new Set(
+    ((bookmarkData ?? []) as { activity_id: string | number }[]).map((b) => String(b.activity_id))
+  )
 
   const ratingTotals = new Map<string, { total: number; count: number }>()
   for (const r of (ratings ?? []) as { activity_id: string | number; rating: number }[]) {
@@ -41,6 +58,7 @@ export default async function Home() {
     })
     .map(mapDbActivityToCard)
     .filter((activity): activity is Activity => activity !== null)
+    .map((activity) => ({ ...activity, isBookmarked: bookmarkedIds.has(activity.id) }))
 
   const sections = splitHomepageActivities(activities)
 

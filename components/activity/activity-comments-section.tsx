@@ -115,7 +115,7 @@ export default function ActivityCommentsSection({
 
   return (
     <section className="mt-8 border-t border-[rgba(192,199,209,0.6)] pt-6">
-      <h2 className="font-[family-name:var(--font-nunito)] text-[24px] font-semibold text-[#191c20]">Comments</h2>
+      <h2 className="font-[family-name:var(--font-nunito)] text-[24px] font-semibold text-[#191c20]">Ratings</h2>
 
       <form onSubmit={handleSubmit} className="mt-4 rounded-xl border border-[rgba(192,199,209,0.6)] bg-white/80 p-4">
         <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -160,7 +160,7 @@ export default function ActivityCommentsSection({
             disabled={saving}
             className="rounded-full bg-[#1f93cd] px-4 py-2 text-[14px] font-medium text-white transition hover:bg-[#1b86bc] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? 'Posting...' : 'Post Comment'}
+            {saving ? 'Posting...' : 'Post Rating'}
           </button>
         </div>
       </form>
