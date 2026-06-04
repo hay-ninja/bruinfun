@@ -53,7 +53,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
 
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, ratings(rating)')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
     .eq('activity_id', validId)
     .single()
 
@@ -74,6 +74,17 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     existingRating = ratingRow?.rating ?? null
   }
 
+  const { data: activityRatings } = await supabase
+    .from('ratings')
+    .select('rating')
+    .eq('activity_id', validId)
+
+  let averageRating: number | null = null
+  if (activityRatings && activityRatings.length > 0) {
+    const total = activityRatings.reduce((sum, row) => sum + Number(row.rating ?? 0), 0)
+    averageRating = Number((total / activityRatings.length).toFixed(1))
+  }
+
   if (error || !activity) {
     return (
       <div className="min-h-screen bg-white">
@@ -85,11 +96,6 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
       </div>
     )
   }
-
-  const activityRatings = Array.isArray(activity.ratings) ? activity.ratings : []
-  const avgRating = activityRatings.length
-    ? Math.round((activityRatings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / activityRatings.length) * 10) / 10
-    : null
 
   const initialComments = normalizeActivityComments((comments ?? []) as ActivityComment[])
 
@@ -113,7 +119,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6d7783]">
             <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{activity.category ?? 'uncategorized'}</span>
             <span>{activity.location ?? 'Location unavailable'}</span>
-            {avgRating ? <span>{avgRating} ★</span> : null}
+            {averageRating != null ? <span>{averageRating} ★</span> : null}
           </div>
 
           <div className="mt-4">
