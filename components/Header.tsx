@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Search, CircleUserRound } from 'lucide-react'
 import Link from 'next/link'
+import HomeButton from '@/components/HomeButton'
 import { useRouter } from 'next/navigation'
 
 type ActivitySearchResult = {
@@ -36,17 +37,14 @@ export default function Header({ onLogActivity }: HeaderProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const hasMinQuery = searchQuery.trim().length >= 2
+
   useEffect(() => {
     const query = searchQuery.trim()
-
-    if (query.length < 2) {
-      setResults([])
-      setSearched(false)
-      setSearching(false)
-      return
-    }
+    if (query.length < 2) return
 
     const timer = window.setTimeout(async () => {
+      setResults([])
       setSearching(true)
 
       try {
@@ -54,7 +52,6 @@ export default function Header({ onLogActivity }: HeaderProps) {
         const json = (await res.json()) as { data?: ActivitySearchResult[] }
 
         if (!res.ok) {
-          setResults([])
           setSearched(true)
           return
         }
@@ -62,7 +59,6 @@ export default function Header({ onLogActivity }: HeaderProps) {
         setResults(json.data ?? [])
         setSearched(true)
       } catch {
-        setResults([])
         setSearched(true)
       } finally {
         setSearching(false)
@@ -77,7 +73,7 @@ export default function Header({ onLogActivity }: HeaderProps) {
     setShowDropdown(true)
   }
 
-  const shouldShowDropdown = showDropdown && searchQuery.trim().length >= 2
+  const shouldShowDropdown = showDropdown && hasMinQuery
 
   return (
     // frosted glass from figma, sticky so it stays up top
@@ -85,16 +81,7 @@ export default function Header({ onLogActivity }: HeaderProps) {
 
       {/* logo, flex-1 so search bar ends up centered */}
       <div className="flex-1">
-        {/* gradient clipped to text */}
-        <span
-          className="font-[family-name:var(--font-nunito)] text-[29px] font-semibold tracking-[-0.58px] bg-clip-text text-transparent"
-          style={{
-            backgroundImage:
-              'linear-gradient(0deg, rgb(102,180,218) 0%, rgb(153,222,255) 100%)',
-          }}
-        >
-          BruinFun
-        </span>
+        <HomeButton /> 
       </div>
 
       {/* search bar, fixed width between the two flex-1 sides */}

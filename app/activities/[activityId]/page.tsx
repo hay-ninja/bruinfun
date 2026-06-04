@@ -2,17 +2,38 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CompleteActivityButton from '@/components/CompleteActivityButton'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import ActivityCommentsSection from '@/components/activity/activity-comments-section'
 
 type PageProps = {
   params: Promise<{ activityId: string }>
+}
+
+type ActivityComment = {
+  comment_id: number
+  comment: string
+  created_at: string | null
+  ratings: { rating: number } | { rating: number }[] | null
+}
+
+export function toValidActivityId(activityId: string): number | null {
+  const parsedId = Number(activityId)
+  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+}
+
+export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {
+  return (comments ?? []).map((entry) => ({
+    comment_id: entry.comment_id,
+    comment: entry.comment,
+    created_at: entry.created_at,
+    rating: Array.isArray(entry.ratings) ? (entry.ratings[0]?.rating ?? null) : (entry.ratings?.rating ?? null),
+  }))
 }
 
 export default async function ActivityDetailsPage({ params }: PageProps) {
   const { activityId } = await params
   const supabase = await createServerSupabaseClient()
 
-  const parsedId = Number(activityId)
-  const validId = Number.isInteger(parsedId) ? parsedId : null
+  const validId = toValidActivityId(activityId)
 
   if (!validId) {
     return (
@@ -34,6 +55,12 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
     .eq('activity_id', validId)
     .single()
+
+  const { data: comments, error: commentsError } = await supabase
+    .from('comments')
+    .select('comment_id, comment, created_at, ratings(rating)')
+    .eq('activity_id', validId)
+    .order('created_at', { ascending: false })
 
   let existingRating: number | null = null
   if (user) {
@@ -57,6 +84,8 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
       </div>
     )
   }
+
+  const initialComments = normalizeActivityComments((comments ?? []) as ActivityComment[])
 
   return (
     <div className="min-h-screen bg-white">
@@ -92,6 +121,12 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <p className="mt-6 whitespace-pre-wrap text-[16px] leading-relaxed text-[#323232]">
             {activity.description || 'No description available.'}
           </p>
+
+          <ActivityCommentsSection
+            activityId={validId}
+            initialComments={initialComments}
+            loadError={Boolean(commentsError)}
+          />
         </div>
       </main>
       <Footer />

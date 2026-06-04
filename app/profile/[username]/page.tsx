@@ -11,15 +11,28 @@ type Tab = 'posted' | 'completed'
 type Activity = {
     activity_id: number
     title: string
-    category: string
+    category: string | null
     image_url: string | null
     location: string | null
+    avg_rating: number | null
+}
+
+type CompletedEntry = {
+    rating_id: number
+    rating: number
+    activities: Activity | Activity[] | null
 }
 
 type ProfileData = {
     profile: { username: string; first_name: string; last_name: string }
     posted: Activity[]
-    completed: { rating_id: number; rating: number; activities: Activity }[]
+    completed: CompletedEntry[]
+}
+
+// Supabase joined relations can come back as a single object or an array
+function toActivity(raw: Activity | Activity[] | null): Activity | null {
+    if (!raw) return null
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw
 }
 
 export default function PublicProfilePage() {
@@ -91,9 +104,10 @@ export default function PublicProfilePage() {
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
                     : <div className="flex flex-wrap gap-[20px]">
                         {posted.map((a) => (
-                            <ActivityCard key={a.activity_id} title={a.title} rating={0}
+                            <ActivityCard key={a.activity_id} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
-                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`} />
+                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
+                                href={`/activities/${a.activity_id}`} />
                         ))}
                     </div>
                 )}
@@ -101,14 +115,19 @@ export default function PublicProfilePage() {
                 {tab === 'completed' && (completed.length === 0
                     ? <p className="text-[#a0a3a8]">No completed activities yet.</p>
                     : <div className="flex flex-col gap-[16px]">
-                        {completed.map((entry) => (
-                            <div key={entry.rating_id} className="flex gap-[16px] items-start">
-                                <ActivityCard title={entry.activities.title} rating={entry.rating}
-                                    location={entry.activities.location ?? ''} category={entry.activities.category as any}
-                                    imageUrl={entry.activities.image_url ?? `https://picsum.photos/seed/${entry.activities.activity_id}/400/300`} />
-                                <p className="text-[15px] font-medium text-[#191c20] pt-[8px]">{entry.rating} ★</p>
-                            </div>
-                        ))}
+                        {completed.map((entry) => {
+                            const a = toActivity(entry.activities)
+                            if (!a) return null
+                            return (
+                                <div key={entry.rating_id} className="flex gap-[16px] items-start">
+                                    <ActivityCard title={a.title} rating={entry.rating}
+                                        location={a.location ?? ''} category={a.category as any}
+                                        imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
+                                        href={`/activities/${a.activity_id}`} />
+                                    <p className="text-[15px] font-medium text-[#191c20] pt-[8px]">{entry.rating} ★</p>
+                                </div>
+                            )
+                        })}
                     </div>
                 )}
 
