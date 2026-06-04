@@ -20,28 +20,31 @@ export default async function ActivityModalPage({ params }: PageProps) {
   const validId = toValidActivityId(activityId)
   if (!validId) return null
 
-  const { data: activity, error } = await supabase
-    .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
-    .eq('activity_id', validId)
-    .single()
-
-  const { data: comments, error: commentsError } = await supabase
-    .from('comments')
-    .select('comment_id, comment, created_at, ratings(rating)')
-    .eq('activity_id', validId)
-    .order('created_at', { ascending: false })
+  const [
+    { data: activity, error },
+    { data: comments, error: commentsError },
+    { data: avgResult },
+  ] = await Promise.all([
+    supabase
+      .from('activities')
+      .select('activity_id, title, description, category, location, event_date, image_url, created_at')
+      .eq('activity_id', validId)
+      .single(),
+    supabase
+      .from('comments')
+      .select('comment_id, comment, created_at, ratings(rating)')
+      .eq('activity_id', validId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('ratings')
+      .select('rating.avg()')
+      .eq('activity_id', validId)
+      .single(),
+  ])
 
   if (error || !activity) return null
 
-  const { data: activityRatings } = await supabase
-    .from('ratings')
-    .select('rating')
-    .eq('activity_id', validId)
-
-  const averageRating = activityRatings && activityRatings.length > 0
-    ? Number((activityRatings.reduce((sum, row) => sum + Number(row.rating ?? 0), 0) / activityRatings.length).toFixed(1))
-    : null
+  const averageRating = avgResult?.avg != null ? Number(Number(avgResult.avg).toFixed(1)) : null
 
   const pageActivity = {
     title: activity.title,

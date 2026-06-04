@@ -48,20 +48,31 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const [
+    { data: { user } },
+    { data: activity, error },
+    { data: comments, error: commentsError },
+    { data: avgResult },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from('activities')
+      .select('activity_id, title, description, category, location, event_date, image_url, created_at')
+      .eq('activity_id', validId)
+      .single(),
+    supabase
+      .from('comments')
+      .select('comment_id, comment, created_at, ratings(rating)')
+      .eq('activity_id', validId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('ratings')
+      .select('rating.avg()')
+      .eq('activity_id', validId)
+      .single(),
+  ])
+
   const isLoggedIn = !!user
-
-  const { data: activity, error } = await supabase
-    .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
-    .eq('activity_id', validId)
-    .single()
-
-  const { data: comments, error: commentsError } = await supabase
-    .from('comments')
-    .select('comment_id, comment, created_at, ratings(rating)')
-    .eq('activity_id', validId)
-    .order('created_at', { ascending: false })
 
   let existingRating: number | null = null
   if (user) {
@@ -74,16 +85,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     existingRating = ratingRow?.rating ?? null
   }
 
-  const { data: activityRatings } = await supabase
-    .from('ratings')
-    .select('rating')
-    .eq('activity_id', validId)
-
-  let averageRating: number | null = null
-  if (activityRatings && activityRatings.length > 0) {
-    const total = activityRatings.reduce((sum, row) => sum + Number(row.rating ?? 0), 0)
-    averageRating = Number((total / activityRatings.length).toFixed(1))
-  }
+  const averageRating = avgResult?.avg != null ? Number(Number(avgResult.avg).toFixed(1)) : null
 
   if (error || !activity) {
     return (
