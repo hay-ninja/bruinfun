@@ -32,7 +32,7 @@ type PageActivity = {
 }
 
 type Props = {
-  activityId: number
+  activityId: number | string
   pageActivity: PageActivity
   dbActivity?: DbActivity
   initialComments: CommentItem[]
@@ -116,9 +116,6 @@ export default function ActivityDetailOverlay({
             activityId={activityId}
             initialComments={initialComments}
             loadError={commentsError}
-            activity={dbActivity}
-            isLoggedIn={isLoggedIn}
-            existingRating={existingRating}
           />
         </div>
       </div>

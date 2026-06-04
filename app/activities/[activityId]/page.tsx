@@ -15,9 +15,11 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
-export function toValidActivityId(activityId: string): number | null {
-  const parsedId = Number(activityId)
-  return Number.isInteger(parsedId) && parsedId > 0 ? parsedId : null
+// activity_id in the DB is a UUID string, not an integer
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function toValidActivityId(activityId: string): string | null {
+  return UUID_REGEX.test(activityId) ? activityId : null
 }
 
 export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {
@@ -33,7 +35,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
   const { activityId } = await params
   const supabase = await createServerSupabaseClient()
 
-  const validId = toValidActivityId(activityId)
+  const validId: string | null = toValidActivityId(activityId)
 
   if (!validId) {
     return (
@@ -52,7 +54,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
 
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
     .eq('activity_id', validId)
     .single()
 
@@ -107,7 +109,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6d7783]">
             <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{activity.category ?? 'uncategorized'}</span>
             <span>{activity.location ?? 'Location unavailable'}</span>
-            {activity.avg_rating ? <span>{activity.avg_rating} ★</span> : null}
+            {(activity as any).avg_rating ? <span>{(activity as any).avg_rating} ★</span> : null}
           </div>
 
           <div className="mt-4">

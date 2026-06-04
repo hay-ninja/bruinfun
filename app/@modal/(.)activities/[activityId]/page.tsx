@@ -26,7 +26,7 @@ export default async function ActivityModalPage({ params }: PageProps) {
 
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at')
     .eq('activity_id', validId)
     .single()
 
@@ -47,7 +47,7 @@ export default async function ActivityModalPage({ params }: PageProps) {
     existingRating = ratingRow?.rating ?? null
   }
 
-  const fallbackActivity = [...TRENDING, ...OFF_CAMPUS, ...ON_CAMPUS].find((item) => item.id === validId)
+  const fallbackActivity = [...TRENDING, ...OFF_CAMPUS, ...ON_CAMPUS].find((item) => String(item.id) === String(validId))
 
   if ((error || !activity) && !fallbackActivity) return null
 
@@ -56,7 +56,7 @@ export default async function ActivityModalPage({ params }: PageProps) {
         title: activity.title,
         category: activity.category,
         location: activity.location,
-        avg_rating: activity.avg_rating,
+        avg_rating: null,
         image_url: activity.image_url,
         description: activity.description,
       }
