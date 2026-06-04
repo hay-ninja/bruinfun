@@ -98,7 +98,12 @@ export default function ProfilePage() {
                         </h1>
                         <p className="text-[#a0a3a8] text-[15px]">@{profile.username}</p>
                     </div>
-                    
+                    <button
+                        onClick={handleLogout}
+                        className="text-[14px] text-[#a0a3a8] hover:text-[#191c20] border border-[#e0e0e0] hover:border-[#191c20] rounded-[8px] px-[16px] py-[8px] transition-colors"
+                    >
+                        Log out
+                    </button>
                 </div>
 
                 {/* tab switcher */}
