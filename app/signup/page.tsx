@@ -8,6 +8,9 @@ export default function SignupPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [username, setUsername] = useState('')
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -19,7 +22,7 @@ export default function SignupPage() {
         const res = await fetch('/api/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, username, first_name: firstName, last_name: lastName }),
         })
 
         const data = await res.json()
@@ -38,6 +41,32 @@ export default function SignupPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
                 <h1 className="text-2xl font-bold">Sign up</h1>
 
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="First name"
+                        value={firstName}
+                        onChange={e => setFirstName(e.target.value)}
+                        required
+                        className="border rounded px-3 py-2 w-1/2"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Last name"
+                        value={lastName}
+                        onChange={e => setLastName(e.target.value)}
+                        required
+                        className="border rounded px-3 py-2 w-1/2"
+                    />
+                </div>
+                <input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    required
+                    className="border rounded px-3 py-2"
+                />
                 <input
                     type="email"
                     placeholder="Email"
