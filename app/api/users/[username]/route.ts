@@ -22,7 +22,7 @@ export async function GET(
     // their posted activities
     const { data: posted, error: postedError } = await supabase
         .from('activities')
-        .select('activity_id, title, category, image_url, location, avg_rating, created_at')
+        .select('activity_id, title, category, image_url, location, created_at')
         .eq('profile_id', profile.profile_id)
         .order('created_at', { ascending: false })
 
