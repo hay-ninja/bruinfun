@@ -6,15 +6,14 @@ import { Bookmark } from 'lucide-react'
 type BookmarkButtonProps = {
   activityId: number
   initialBookmarked: boolean
-  token?: string
+  token: string
 }
 
 export default function BookmarkButton({ activityId, initialBookmarked, token }: BookmarkButtonProps) {
   const [bookmarked, setBookmarked] = useState(initialBookmarked)
   const [loading, setLoading] = useState(false)
 
-  async function handleToggle(e: React.MouseEvent) {
-    e.stopPropagation()
+  async function handleToggle() {
     if (loading) return
 
     const prev = bookmarked
@@ -22,12 +21,12 @@ export default function BookmarkButton({ activityId, initialBookmarked, token }:
     setLoading(true)
 
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      if (token) headers['Authorization'] = `Bearer ${token}`
-
       const res = await fetch('/api/bookmarks', {
         method: prev ? 'DELETE' : 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ activity_id: activityId }),
       })
 
@@ -47,10 +46,11 @@ export default function BookmarkButton({ activityId, initialBookmarked, token }:
       onClick={handleToggle}
       disabled={loading}
       aria-label={bookmarked ? 'Remove bookmark' : 'Save bookmark'}
+      className={`p-2 rounded-full transition-colors ${loading ? 'opacity-50' : 'hover:bg-gray-100'}`}
     >
       <Bookmark
         size={20}
-        className={bookmarked ? 'fill-blue-600 stroke-blue-600' : 'fill-black/20 stroke-white hover:fill-black/40'}
+        className={bookmarked ? 'fill-blue-600 stroke-blue-600' : 'stroke-gray-500'}
       />
     </button>
   )

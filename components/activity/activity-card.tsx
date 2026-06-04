@@ -1,23 +1,18 @@
 // individual card! thanks kai for design so clutch
 import { MapPin, Users, Utensils, Tag, Zap, Calendar } from 'lucide-react'
-import Link from 'next/link'
-import BookmarkButton from '@/components/BookmarkButton'
 
 type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
 
 type ActivityCardProps = {
-  id?: number
   title: string
   rating: number
   location: string
   imageUrl: string
-  href?: string
   category?: Category
   attendeeCount?: number
   tags?: string[]
   isBookmarked?: boolean
   className?: string
-  onClick?: () => void
 }
 
 // badge color per category, pulled directly from figma thx kai :D
@@ -39,31 +34,22 @@ const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
 }
 
 export default function ActivityCard({
-  id,
   title,
   rating,
   location,
   imageUrl,
-  href,
   category,
   attendeeCount,
   tags = [],
   isBookmarked = false,
   className = '',
-  onClick,
 }: ActivityCardProps) {
   // grab the right color + icon for the badge
   const badgeColor = category ? CATEGORY_COLORS[category] : '#007aff'
   const badgeIcon  = category ? CATEGORY_ICONS[category]  : null
-  const hoverClass = href
-    ? 'transition-transform duration-200 will-change-transform hover:-translate-y-[2px] hover:shadow-[0px_8px_22px_-8px_rgba(0,0,0,0.35)]'
-    : ''
 
-  const card = (
-    <div
-      onClick={onClick}
-      className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-2px_rgba(0,0,0,0.2)] transition-shadow ${onClick ? 'cursor-pointer hover:shadow-[0px_4px_24px_-1px_rgba(0,0,0,0.25)]' : ''} ${className}`}
-    >
+  return (
+    <div className={`flex-shrink-0 w-[266px] flex flex-col rounded-[24px] overflow-hidden bg-[rgba(255,255,255,0.3)] border border-[rgba(192,199,209,0.6)] shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.2)] ${className}`}>
 
       {/* photo with badge + bookmark overlaid */}
       <div className="relative h-[163px] overflow-hidden">
@@ -80,12 +66,12 @@ export default function ActivityCard({
           </div>
         )}
 
-        {/* save button */}
-        {id !== undefined && (
-          <div className="absolute top-[18px] right-[16px]">
-            <BookmarkButton activityId={id} initialBookmarked={isBookmarked} />
-          </div>
-        )}
+        {/* custom bookmark svg from figma, not a lucide icon */}
+        <div className="absolute top-[18px] right-[18px] drop-shadow-[0px_1.4px_1.4px_rgba(0,0,0,0.1)]">
+          <svg width="14" height="19" viewBox="0 0 14 19" fill={isBookmarked ? 'white' : 'rgba(0,0,0,0.2)'} xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 19V2C0 0.9 0.9 0 2 0H12C13.1 0 14 0.9 14 2V19L7 16L0 19Z" />
+          </svg>
+        </div>
       </div>
 
       {/* everything below the photo */}
@@ -125,7 +111,7 @@ export default function ActivityCard({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-[11.8px] font-semibold text-[#323232] bg-[rgba(255,255,255,0.8)] border border-[rgba(166, 166, 166, 0.8)] px-[9px] py-[4.5px] rounded-full"
+                  className="text-[11.8px] font-semibold text-[#323232] bg-[rgba(255,255,255,0.8)] border border-white px-[9px] py-[4.5px] rounded-full"
                 >
                   {tag}
                 </span>
@@ -135,13 +121,5 @@ export default function ActivityCard({
         )}
       </div>
     </div>
-  )
-
-  if (!href) return card
-
-  return (
-    <Link href={href} className="block rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f93cd] focus-visible:ring-offset-2">
-      {card}
-    </Link>
   )
 }

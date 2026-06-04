@@ -22,10 +22,9 @@ const PAGE_SIZE = 12
 
 type BrowseAllProps = {
   activities: Activity[]
-  onSelect?: (activity: Activity) => void
 }
 
-export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
+export default function BrowseAll({ activities }: BrowseAllProps) {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
   const [sort, setSort]                     = useState('Newest')
   const [showSortMenu, setShowSortMenu]     = useState(false)
@@ -130,7 +129,7 @@ export default function BrowseAll({ activities, onSelect }: BrowseAllProps) {
       {/* 4 col grid */}
       <div className="grid grid-cols-4 gap-[28px]">
         {visible.map(a => (
-          <ActivityCard key={a.id} {...a} className="w-full" onClick={() => onSelect?.(a)} />
+          <ActivityCard key={a.id} {...a} className="w-full" />
         ))}
       </div>
 

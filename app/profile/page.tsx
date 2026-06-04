@@ -11,34 +11,16 @@ type Tab = 'posted' | 'completed' | 'bookmarks'
 type Activity = {
     activity_id: number
     title: string
-    category: string | null
+    category: string
     image_url: string | null
     location: string | null
-    avg_rating: number | null
-}
-
-type CompletedEntry = {
-    rating_id: number
-    rating: number
-    activities: Activity | Activity[] | null
-}
-
-type BookmarkEntry = {
-    activity_id: number
-    activities: Activity | Activity[] | null
 }
 
 type ProfileData = {
     profile: { username: string; first_name: string; last_name: string }
     posted: Activity[]
-    completed: CompletedEntry[]
-    bookmarks: BookmarkEntry[]
-}
-
-// Supabase joined relations can come back as a single object or an array
-function toActivity(raw: Activity | Activity[] | null): Activity | null {
-    if (!raw) return null
-    return Array.isArray(raw) ? (raw[0] ?? null) : raw
+    completed: { rating_id: number; rating: number; activities: Activity }[]
+    bookmarks: { activity_id: number; activities: Activity }[]
 }
 
 export default function ProfilePage() {
@@ -111,10 +93,9 @@ export default function ProfilePage() {
                     ? <p className="text-[#a0a3a8]">No activities posted yet.</p>
                     : <div className="flex flex-wrap gap-[20px]">
                         {posted.map((a) => (
-                            <ActivityCard key={a.activity_id} title={a.title} rating={a.avg_rating ?? 0}
+                            <ActivityCard key={a.activity_id} title={a.title} rating={0}
                                 location={a.location ?? ''} category={a.category as any}
-                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
-                                href={`/activities/${a.activity_id}`} />
+                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`} />
                         ))}
                     </div>
                 )}
@@ -123,21 +104,16 @@ export default function ProfilePage() {
                 {tab === 'completed' && (completed.length === 0
                     ? <p className="text-[#a0a3a8]">No completed activities yet.</p>
                     : <div className="flex flex-col gap-[16px]">
-                        {completed.map((entry) => {
-                            const a = toActivity(entry.activities)
-                            if (!a) return null
-                            return (
-                                <div key={entry.rating_id} className="flex gap-[16px] items-start">
-                                    <ActivityCard title={a.title} rating={entry.rating}
-                                        location={a.location ?? ''} category={a.category as any}
-                                        imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
-                                        href={`/activities/${a.activity_id}`} />
-                                    <div className="flex flex-col gap-[4px] pt-[8px]">
-                                        <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
-                                    </div>
+                        {completed.map((entry) => (
+                            <div key={entry.rating_id} className="flex gap-[16px] items-start">
+                                <ActivityCard title={entry.activities.title} rating={entry.rating}
+                                    location={entry.activities.location ?? ''} category={entry.activities.category as any}
+                                    imageUrl={entry.activities.image_url ?? `https://picsum.photos/seed/${entry.activities.activity_id}/400/300`} />
+                                <div className="flex flex-col gap-[4px] pt-[8px]">
+                                    <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
                                 </div>
-                            )
-                        })}
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -145,17 +121,12 @@ export default function ProfilePage() {
                 {tab === 'bookmarks' && (bookmarks.length === 0
                     ? <p className="text-[#a0a3a8]">No bookmarks yet.</p>
                     : <div className="flex flex-wrap gap-[20px]">
-                        {bookmarks.map((b) => {
-                            const a = toActivity(b.activities)
-                            if (!a) return null
-                            return (
-                                <ActivityCard key={b.activity_id} title={a.title} rating={a.avg_rating ?? 0}
-                                    location={a.location ?? ''} category={a.category as any}
-                                    imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
-                                    href={`/activities/${a.activity_id}`}
-                                    isBookmarked={true} />
-                            )
-                        })}
+                        {bookmarks.map((b) => (
+                            <ActivityCard key={b.activity_id} title={b.activities.title} rating={0}
+                                location={b.activities.location ?? ''} category={b.activities.category as any}
+                                imageUrl={b.activities.image_url ?? `https://picsum.photos/seed/${b.activity_id}/400/300`}
+                                isBookmarked={true} />
+                        ))}
                     </div>
                 )}
 
