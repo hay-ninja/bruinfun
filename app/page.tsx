@@ -6,11 +6,13 @@ export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('activities')
-    .select('activity_id, title, category, location, image_url, avg_rating')
+    .select('activity_id, title, category, location, image_url, ratings(rating)')
     .order('created_at', { ascending: false })
     .limit(60)
+
+  if (error) console.error('[homepage] activities fetch error:', error.message)
 
   const activities = ((data ?? []) as DbActivity[])
     .map(mapDbActivityToCard)

@@ -15,7 +15,7 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i // I LOVE REGEX hahahaha this was fun -hay_ninja
 
 export function toValidActivityId(activityId: string): string | null {
   return UUID_PATTERN.test(activityId) ? activityId : null
@@ -53,7 +53,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
 
   const { data: activity, error } = await supabase
     .from('activities')
-    .select('activity_id, title, description, category, location, event_date, image_url, created_at, avg_rating')
+    .select('activity_id, title, description, category, location, event_date, image_url, created_at, ratings(rating)')
     .eq('activity_id', validId)
     .single()
 
@@ -86,6 +86,11 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
+  const activityRatings = Array.isArray(activity.ratings) ? activity.ratings : []
+  const avgRating = activityRatings.length
+    ? Math.round((activityRatings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / activityRatings.length) * 10) / 10
+    : null
+
   const initialComments = normalizeActivityComments((comments ?? []) as ActivityComment[])
 
   return (
@@ -108,7 +113,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6d7783]">
             <span className="rounded-full bg-[#eef6fb] px-3 py-1 capitalize">{activity.category ?? 'uncategorized'}</span>
             <span>{activity.location ?? 'Location unavailable'}</span>
-            {activity.avg_rating ? <span>{activity.avg_rating} ★</span> : null}
+            {avgRating ? <span>{avgRating} ★</span> : null}
           </div>
 
           <div className="mt-4">

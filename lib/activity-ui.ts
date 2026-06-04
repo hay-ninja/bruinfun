@@ -19,7 +19,7 @@ export type DbActivity = {
   category: string | null
   location: string | null
   image_url: string | null
-  avg_rating: number | null
+  ratings?: { rating: number }[] | null
 }
 
 const campusLocationPattern = /ucla|ackerman|powell|janss|royce|bruin|de neve|sunset|westwood|wooden|kerckhoff|schoenberg|anderson|boelter/i
@@ -49,10 +49,15 @@ export function mapDbActivityToCard(activity: DbActivity): Activity | null {
     return null
   }
 
+  const ratings = activity.ratings ?? []
+  const avg = ratings.length
+    ? Math.round((ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length) * 10) / 10
+    : 0
+
   return {
     id,
     title: activity.title,
-    rating: Number(activity.avg_rating ?? 0),
+    rating: avg,
     location: activity.location ?? 'Location unavailable',
     imageUrl: activity.image_url,
     href: `/activities/${id}`,
