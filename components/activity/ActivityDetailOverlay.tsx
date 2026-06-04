@@ -12,16 +12,6 @@ type CommentItem = {
   rating: number | null
 }
 
-type DbActivity = {
-  activity_id: number | string
-  title: string
-  description: string | null
-  category: string | null
-  location: string | null
-  event_date: string | null
-  image_url: string | null
-}
-
 type PageActivity = {
   title: string
   category: string | null
@@ -34,21 +24,15 @@ type PageActivity = {
 type Props = {
   activityId: number
   pageActivity: PageActivity
-  dbActivity?: DbActivity
   initialComments: CommentItem[]
   commentsError: boolean
-  isLoggedIn: boolean
-  existingRating: number | null
 }
 
 export default function ActivityDetailOverlay({
   activityId,
   pageActivity,
-  dbActivity,
   initialComments,
   commentsError,
-  isLoggedIn,
-  existingRating,
 }: Props) {
   const router = useRouter()
   const close = useCallback(() => router.back(), [router])
@@ -116,9 +100,6 @@ export default function ActivityDetailOverlay({
             activityId={activityId}
             initialComments={initialComments}
             loadError={commentsError}
-            activity={dbActivity}
-            isLoggedIn={isLoggedIn}
-            existingRating={existingRating}
           />
         </div>
       </div>

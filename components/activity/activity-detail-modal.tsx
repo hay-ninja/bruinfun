@@ -2,25 +2,23 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { MapPin, Users, Utensils, Tag, Zap, Calendar, ArrowLeft, Bookmark } from 'lucide-react'
-import { type Activity } from '@/lib/mock-activities'
+import { categoryLabel, type Activity, type ActivityCategory } from '@/lib/activity-ui'
 import ActivityCommentsSection from '@/components/activity/activity-comments-section'
 
-type Category = 'Restaurant' | 'Place' | 'Service' | 'Product' | 'Event'
-
-const CATEGORY_COLORS: Record<Category, string> = {
-  Restaurant: '#ff9502',
-  Place:      '#007aff',
-  Service:    '#4bb430',
-  Product:    '#ff2c55',
-  Event:      '#a855f7',
+const CATEGORY_COLORS: Record<ActivityCategory, string> = {
+  food: '#ff9502',
+  outdoors: '#007aff',
+  sports: '#4bb430',
+  arts: '#a855f7',
+  nightlife: '#ff2c55',
 }
 
-const CATEGORY_ICONS: Record<Category, React.ReactNode> = {
-  Restaurant: <Utensils size={10} strokeWidth={2.5} />,
-  Place:      <MapPin   size={10} strokeWidth={2.5} />,
-  Service:    <Zap      size={10} strokeWidth={2.5} />,
-  Product:    <Tag      size={10} strokeWidth={2.5} />,
-  Event:      <Calendar size={10} strokeWidth={2.5} />,
+const CATEGORY_ICONS: Record<ActivityCategory, React.ReactNode> = {
+  food: <Utensils size={10} strokeWidth={2.5} />,
+  outdoors: <MapPin size={10} strokeWidth={2.5} />,
+  sports: <Zap size={10} strokeWidth={2.5} />,
+  arts: <Tag size={10} strokeWidth={2.5} />,
+  nightlife: <Calendar size={10} strokeWidth={2.5} />,
 }
 
 type Props = {
@@ -51,8 +49,8 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
     }
   }, [handleClose])
 
-  const badgeColor = CATEGORY_COLORS[activity.category]
-  const badgeIcon  = CATEGORY_ICONS[activity.category]
+  const badgeColor = activity.category ? CATEGORY_COLORS[activity.category] : '#007aff'
+  const badgeIcon  = activity.category ? CATEGORY_ICONS[activity.category] : null
 
   return (
     <div
@@ -120,13 +118,15 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
               </div>
 
               {/* category badge */}
-              <div
+              {activity.category ? (
+                <div
                   className="flex w-[fit-content] items-center gap-[3.5px] text-white px-[10px] py-[5px] rounded-full shadow-[0px_1.68px_1.68px_0px_rgba(0,0,0,0.05)]"
                   style={{ backgroundColor: badgeColor }}
-              >
+                >
                   {badgeIcon}
-                  <span className="text-[14px] font-semibold leading-none">{activity.category}</span>
-              </div>
+                  <span className="text-[14px] font-semibold leading-none">{categoryLabel(activity.category)}</span>
+                </div>
+              ) : null}
             </div>
 
             {/* location */}
@@ -159,11 +159,17 @@ export default function ActivityDetailModal({ activity, onClose }: Props) {
           {/* right: image */}
           <div className="w-[409px] shrink-0">
             <div className="w-full h-[307px] rounded-[20px] overflow-hidden">
-              <img
-                src={activity.imageUrl}
-                alt={activity.title}
-                className="w-full h-full object-cover"
-              />
+              {activity.imageUrl ? (
+                <img
+                  src={activity.imageUrl}
+                  alt={activity.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[#dff3fb] px-8 text-center font-[family-name:var(--font-nunito)] text-[24px] font-semibold text-[#1f93cd]">
+                  {activity.title}
+                </div>
+              )}
             </div>
           </div>
         </div>

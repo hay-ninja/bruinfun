@@ -1,10 +1,10 @@
-// a single "row" of activites: eg. the trending / off-campus row 
+// a single "row" of activites: eg. the trending / off-campus row
 'use client'
 
 import { useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ActivityCard from './activity-card'
-import { type Activity } from '@/lib/mock-activities'
+import { type Activity } from '@/lib/activity-ui'
 
 type ActivityRowProps = {
   title: string
@@ -35,7 +35,8 @@ export default function ActivityRow({ title, activities, onSelect }: ActivityRow
       </h2>
 
       {/* relative so fade + arrow can sit on top */}
-      <div className="relative">
+      {activities.length > 0 ? (
+        <div className="relative">
 
         {/* inline style needed to hide scrollbar cross-browser, tailwind alone doesnt cut it */}
         <div
@@ -45,7 +46,7 @@ export default function ActivityRow({ title, activities, onSelect }: ActivityRow
           onScroll={(e) => setScrolled(e.currentTarget.scrollLeft > 0)}
         >
           {activities.map((a) => (
-            <ActivityCard key={a.id} {...a} onClick={() => onSelect?.(a)} />
+            <ActivityCard key={a.id} {...a} onClick={onSelect ? () => onSelect(a) : undefined} />
           ))}
         </div>
 
@@ -72,7 +73,12 @@ export default function ActivityRow({ title, activities, onSelect }: ActivityRow
         >
           <ChevronRight size={16} className="text-black" />
         </button>
-      </div>
+        </div>
+      ) : (
+        <div className="rounded-[24px] border border-[rgba(192,199,209,0.6)] bg-[rgba(255,255,255,0.5)] px-6 py-8 text-center text-[15px] text-[#6d7783]">
+          No activities here yet.
+        </div>
+      )}
     </section>
   )
 }

@@ -113,7 +113,7 @@ export default function ProfilePage() {
                         {posted.map((a) => (
                             <ActivityCard key={a.activity_id} title={a.title} rating={a.avg_rating ?? 0}
                                 location={a.location ?? ''} category={a.category as any}
-                                imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
+                                imageUrl={a.image_url}
                                 href={`/activities/${a.activity_id}`} />
                         ))}
                     </div>
@@ -130,7 +130,7 @@ export default function ProfilePage() {
                                 <div key={entry.rating_id} className="flex gap-[16px] items-start">
                                     <ActivityCard title={a.title} rating={entry.rating}
                                         location={a.location ?? ''} category={a.category as any}
-                                        imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
+                                        imageUrl={a.image_url}
                                         href={`/activities/${a.activity_id}`} />
                                     <div className="flex flex-col gap-[4px] pt-[8px]">
                                         <p className="text-[15px] font-medium text-[#191c20]">Your rating: {entry.rating} ★</p>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                             return (
                                 <ActivityCard key={b.activity_id} title={a.title} rating={a.avg_rating ?? 0}
                                     location={a.location ?? ''} category={a.category as any}
-                                    imageUrl={a.image_url ?? `https://picsum.photos/seed/${a.activity_id}/400/300`}
+                                    imageUrl={a.image_url}
                                     href={`/activities/${a.activity_id}`}
                                     isBookmarked={true} />
                             )

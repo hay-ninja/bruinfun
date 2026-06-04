@@ -16,7 +16,7 @@ export default function RootLayout({
   modal,
 }: {
   children: React.ReactNode;
-  modal: React.ReactNode;
+  modal?: React.ReactNode;
 }) {
   return (
     <html lang="en" className={cn("font-sans", inter.variable, nunito.variable)}>

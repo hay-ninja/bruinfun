@@ -1,42 +1,22 @@
-'use client'
-
-import { useState } from 'react'
-import Header from '@/components/Header'
 import HomeClient from '@/components/home-client'
-import Footer from '@/components/Footer'
-import LogActivityModal from '@/components/LogActivityModal'
-import { TRENDING, OFF_CAMPUS, ON_CAMPUS } from '@/lib/mock-activities'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
 
-const ALL_ACTIVITIES = [...TRENDING, ...OFF_CAMPUS, ...ON_CAMPUS]
+export const dynamic = 'force-dynamic'
 
-export default function Home() {
-  const [logModalOpen, setLogModalOpen] = useState(false)
-  const [initialLogQuery, setInitialLogQuery] = useState('')
+export default async function Home() {
+  const supabase = await createServerSupabaseClient()
+  const { data } = await supabase
+    .from('activities')
+    .select('activity_id, title, category, location, image_url, avg_rating')
+    .order('created_at', { ascending: false })
+    .limit(60)
 
-  function openLogModal() {
-    setInitialLogQuery('')
-    setLogModalOpen(true)
-  }
+  const activities = ((data ?? []) as DbActivity[])
+    .map(mapDbActivityToCard)
+    .filter((activity): activity is Activity => activity !== null)
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Header onLogActivity={() => setLogModalOpen(true)} />
+  const sections = splitHomepageActivities(activities)
 
-      <HomeClient
-        trending={TRENDING}
-        offCampus={OFF_CAMPUS}
-        onCampus={ON_CAMPUS}
-        all={ALL_ACTIVITIES}
-      />
-      <Footer />
-
-      {logModalOpen && (
-        <LogActivityModal
-          initialQuery=""
-          onClose={() => setLogModalOpen(false)}
-          onLogged={() => setLogModalOpen(false)}
-        />
-      )}
-    </div>
-  )
+  return <HomeClient {...sections} />
 }
