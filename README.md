@@ -1,133 +1,418 @@
 # BruinFun
 
-A community-driven web platform where UCLA students discover and share fun activities in LA.
+BruinFun is a UCLA community app for discovering, logging, rating, and discussing activities around campus and LA.
 
-## Tech Stack
+## Current Stack
 
-- **Framework:** Next.js 16 (App Router)
-- **Language:** TypeScript
-- **Styling:** TailwindCSS v4 + shadcn/ui
-- **Database:** Supabase (PostgreSQL)
-- **Auth:** Manual cookie-based auth
-- **Photos:** Cloudinary
-- **Hosting:** Vercel
+- Next.js 16 App Router
+- TypeScript
+- Tailwind CSS v4 + shadcn/ui
+- Supabase Postgres
+- Manual cookie auth (`bf_session`) using signed tokens
+- Cloudinary image uploads
+- Vitest for API/component tests
 
----
+## AI Usage
 
-## Getting Started
+See [AI_USAGE.md](AI_USAGE.md) for a concise statement on limited AI-assisted workflow in this project.
 
-### Prerequisites
-- Node.js 18+
-- npm 9+
+## How To Start The Website
 
-### Setup
+Option 1: Run locally (clone + env)
 
-1. Clone the repo:
+1. Clone and enter project
+
 ```bash
-git clone https://github.com/your-org/bruinfun.git
+git clone https://github.com/<your-org-or-user>/bruinfun.git
 cd bruinfun
 ```
 
-2. Install dependencies:
+2. Install dependencies
+
 ```bash
 npm install
 ```
 
-3. Create your local env file:
+3. Create local env file
+
 ```bash
 cp .env.example .env.local
 ```
-Open `.env.local` and fill in the values — ask a teammate for the Supabase URL/keys and Cloudinary cloud name, API key, and API secret.
 
-4. Start the dev server:
+4. Fill in `.env.local` with team credentials
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `AUTH_SECRET`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+
+5. Start dev server
+
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:3000`.
+6. Open browser
 
-> **Note:** Never commit `.env.local`. It's gitignored. Your real keys stay local only.
+- `http://localhost:3000`
 
----
+Option 2: Open deployed site on Vercel
 
-## Project Structure
+1. Go to your team Vercel deployment URL
+2. If needed, log in or sign up from the deployed app
+3. Use the same core flows as local: browse feed, open activity details, post, bookmark, and view profile
 
-```
-app/                  # Next.js App Router pages and layouts
-  layout.tsx          # Root layout (html, body, global styles)
-  page.tsx            # Homepage — currently renders DemoPage
-  globals.css         # Tailwind import + shadcn CSS variables
+## 3 Distinct Features
 
-components/
-  ui/                 # shadcn components (auto-populated via CLI)
+1. Dynamic information to user through login, homepage, activity details, rating
 
-lib/
-  supabase.ts         # Supabase client (reads from .env.local)
-  utils.ts            # cn() helper for merging Tailwind classes
-```
+- Login sets signed cookie session and personalizes user state
+- Homepage dynamically loads activities, ratings summary, and user bookmark state
+- Activity details page shows live metadata and supports rating/comment flow
 
----
+2. Posting activity modal and search bar
 
-## Branch Conventions
+- Log Activity modal lets users create new activities with title, category, location, date, description, and image
+- Header search surfaces activities and routes users quickly to matching details
 
-Always branch off `main`. Pull first so you're up to date.
+3. Bookmarks and profile page
 
-```bash
-git checkout main
-git pull
-git checkout -b <type>/<short-description>
-```
+- Users can save/unsave activities through bookmark APIs
+- Profile page shows posted, completed, and bookmarked activity views
+- Public user profile route supports viewing another user's posted/completed activity history
 
-### Branch types
+## Quick Start
 
-| Type | When to use | Example |
-|---|---|---|
-| `feat/` | New feature or page | `feat/activity-card` |
-| `fix/` | Bug fix | `fix/search-bar-overflow` |
-| `chore/` | Config, deps, tooling | `chore/update-supabase` |
-| `refactor/` | Restructuring without behavior change | `refactor/demo-cleanup` |
-| `docs/` | README or comment updates | `docs/setup-instructions` |
-
-### Commit messages
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add activity card component
-fix: sidebar nav active state not updating
-chore: add cloudinary env var to example
-refactor: move demo components into /demo folder
-docs: update setup steps in README
-```
-
-### Pull Requests
-
-- Open a PR against `main`
-- At least **1 approval** before merging
-- Delete the branch after merge
-
----
-
-## Adding shadcn Components
+1. Install
 
 ```bash
-npx shadcn add <component>
-# examples:
-npx shadcn add button
-npx shadcn add dialog
-npx shadcn add input card
+npm install
 ```
 
-Components land in `components/ui/` as your own code — edit them freely.
+2. Create local env
 
----
+```bash
+cp .env.example .env.local
+```
 
-## Team
+3. Required env values
 
-| Person | Area |
-|---|---|
-| ryder | Authentication |
-| haydn | Database, http functions, cloundinary api, Activity Log |
-| kai| DESIGN, Home page => Feed, Search, Map |
-| TBD | Activity Details, Ratings, Comments |
-| TBD | Bookmarks, Profile, Polish |
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `AUTH_SECRET`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+
+4. Run
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`
+
+## Useful Commands
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run test
+npm run test:watch
+```
+
+## Database Schema (Current)
+
+Core tables and policies used in app logic.
+
+- `profiles`
+  - `profile_id uuid PK -> auth.users(id)`
+  - `username text unique not null`
+  - `first_name text not null`
+  - `last_name text not null`
+  - `SELECT`: public
+  - `INSERT`: `auth.uid() = profile_id`
+  - `UPDATE`: `auth.uid() = profile_id`
+
+- `activities`
+  - `activity_id uuid PK`
+  - `profile_id uuid FK -> profiles.profile_id`
+  - `title text not null`
+  - `description text nullable`
+  - `category text not null` (`sports|food|arts|nightlife|outdoors`)
+  - `location text nullable`
+  - `image_url text nullable`
+  - `event_date timestamptz nullable`
+  - `status text default 'active'`
+  - `created_at timestamptz default now()`
+  - `SELECT`: public
+  - `INSERT`: `auth.uid() = profile_id`
+  - `UPDATE`: `auth.uid() = profile_id`
+  - `DELETE`: `auth.uid() = profile_id`
+
+- `ratings`
+  - `rating_id uuid PK`
+  - `profile_id uuid FK -> profiles.profile_id`
+  - `activity_id uuid FK -> activities.activity_id`
+  - `rating numeric(3,1)` from 1.0 to 10.0
+  - `image_url text nullable`
+  - `created_at timestamptz default now()`
+  - `UNIQUE(profile_id, activity_id)`
+  - `SELECT`: public
+  - `INSERT`: `auth.uid() = profile_id`
+  - `UPDATE`: `auth.uid() = profile_id`
+
+- `comments`
+  - `comment_id uuid PK`
+  - `profile_id uuid FK -> profiles.profile_id`
+  - `activity_id uuid FK -> activities.activity_id`
+  - `rating_id uuid FK nullable -> ratings.rating_id`
+  - `comment text not null`
+  - `created_at timestamptz default now()`
+  - `SELECT`: public
+  - `INSERT`: `auth.uid() = profile_id`
+
+- `bookmarks`
+  - composite PK: `(profile_id, activity_id)`
+  - `profile_id uuid FK -> profiles.profile_id`
+  - `activity_id uuid FK -> activities.activity_id`
+  - `created_at timestamptz default now()`
+  - `SELECT`: `auth.uid() = profile_id`
+  - `INSERT`: `auth.uid() = profile_id`
+  - `DELETE`: `auth.uid() = profile_id`
+
+- `auth_credentials` (manual auth)
+  - `profile_id uuid PK FK -> profiles.profile_id`
+  - `email text unique not null`
+  - `password_hash text not null`
+  - `created_at timestamptz default now()`
+  - `updated_at timestamptz default now()`
+
+## UML Diagrams
+
+### 1) ER Diagram
+
+```mermaid
+erDiagram
+  PROFILES {
+    uuid profile_id PK
+    text username
+    text first_name
+    text last_name
+  }
+
+  ACTIVITIES {
+    uuid activity_id PK
+    uuid profile_id FK
+    text title
+    text description
+    text category
+    text location
+    text image_url
+    timestamptz event_date
+    text status
+    timestamptz created_at
+  }
+
+  RATINGS {
+    uuid rating_id PK
+    uuid profile_id FK
+    uuid activity_id FK
+    numeric rating
+    text image_url
+    timestamptz created_at
+  }
+
+  COMMENTS {
+    uuid comment_id PK
+    uuid profile_id FK
+    uuid activity_id FK
+    uuid rating_id FK
+    text comment
+    timestamptz created_at
+  }
+
+  BOOKMARKS {
+    uuid profile_id PK,FK
+    uuid activity_id PK,FK
+    timestamptz created_at
+  }
+
+  AUTH_CREDENTIALS {
+    uuid profile_id PK,FK
+    text email
+    text password_hash
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  PROFILES ||--o{ ACTIVITIES : creates
+  PROFILES ||--o{ RATINGS : gives
+  PROFILES ||--o{ COMMENTS : writes
+  PROFILES ||--o{ BOOKMARKS : saves
+  PROFILES ||--|| AUTH_CREDENTIALS : authenticates
+  ACTIVITIES ||--o{ RATINGS : receives
+  ACTIVITIES ||--o{ COMMENTS : contains
+  ACTIVITIES ||--o{ BOOKMARKS : bookmarked
+  RATINGS ||--o{ COMMENTS : optionally_referenced
+```
+
+### 2) High-Level Component Diagram
+
+```mermaid
+flowchart LR
+  U[User Browser]
+  FE[Next.js App Router UI]
+  API[API Routes]
+  AUTH[Manual Auth Layer]
+  DB[(Supabase Postgres)]
+  CLD[(Cloudinary)]
+
+  U --> FE
+  FE --> API
+  API --> AUTH
+  AUTH --> DB
+  API --> DB
+  API --> CLD
+  FE --> API
+```
+
+### 3) Login Sequence
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant L as POST /api/auth/login
+  participant A as auth_credentials
+  participant P as profiles
+
+  C->>L: email + password
+  L->>A: find by email
+  A-->>L: password_hash
+  L->>L: verifyPassword()
+  L->>P: fetch username by profile_id
+  P-->>L: profile row
+  L->>L: createSessionToken()
+  L-->>C: Set-Cookie bf_session + user payload
+```
+
+### 4) Activity Rating + Comment Sequence
+
+```mermaid
+sequenceDiagram
+  participant UI as ActivityCommentsSection
+  participant R as POST /api/ratings
+  participant C as POST /api/comments
+  participant DB as Supabase
+
+  UI->>R: activity_id, rating
+  R->>DB: insert ratings(profile_id, activity_id, rating)
+  DB-->>R: rating_id
+  R-->>UI: 201 + rating_id
+  UI->>C: activity_id, rating_id, comment
+  C->>DB: insert comments(...)
+  DB-->>C: comment row
+  C-->>UI: 201 + comment
+```
+
+### 5) Homepage Data Fetch Flow
+
+```mermaid
+flowchart TD
+  H[app/page.tsx] --> A[Fetch activities]
+  H --> R[Fetch ratings by activity ids]
+  H --> B[Fetch bookmarks for logged-in user]
+  A --> M[Map DB rows to UI cards]
+  R --> M
+  B --> M
+  M --> HC[HomeClient rows + BrowseAll]
+```
+
+## Route Map
+
+Auth routes
+
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `POST /api/auth/change-password`
+
+Activity routes
+
+- `GET /api/activities`
+- `POST /api/activities`
+- `POST /api/ratings`
+- `POST /api/comments`
+- `GET /api/bookmarks`
+- `POST /api/bookmarks`
+- `DELETE /api/bookmarks`
+- `POST /api/uploads`
+
+Profile routes
+
+- `GET /api/profile` (authenticated own profile)
+- `GET /api/users/[username]` (public profile)
+
+## Achievements by Contributor
+
+Kai
+
+- Built and polished major UI surfaces: home feed cards/rows, modal presentation, profile page grid behavior, login/signup styling
+- Integrated and fixed bookmark button UX across feed and profile surfaces
+- Delivered activity-detail and comment-area UI iterations
+
+Haydn
+
+- Built core activities API foundations and early route test scaffolding
+- Drove homepage/feed UI system, browse-all filtering/infinite behavior, and visual shell (header/footer)
+- Improved backend data efficiency by moving average-rating math into DB query flow
+
+Ryder
+
+- Implemented manual cookie-session auth migration and hardened auth/server boundaries
+- Added secure Cloudinary upload handling with validation + rate limiting
+- Added/maintained tests and fixes around activity detail, comments, and API auth mocking
+
+James
+
+- Implemented profile pages/routes and schema-alignment fixes for real DB column names
+- Fixed average rating behavior in profile cards and improved logged-out rating UX messaging
+- Improved search behavior (button/enter routing to top result)
+
+Kaveh
+
+- Added signed Cloudinary upload support and core feature wiring
+- Connected homepage cards to backend activity schema and resolved integration mismatches
+
+## SQL Migration Notes In Repo
+
+- `supabase/sql/manual_auth_credentials.sql`
+- `supabase/sql/auth_profile_trigger.sql`
+- `supabase/sql/fix_category_constraint.sql`
+
+## Team Workflow
+
+Branch naming
+
+- `feat/<short-desc>`
+- `fix/<short-desc>`
+- `chore/<short-desc>`
+- `refactor/<short-desc>`
+- `docs/<short-desc>`
+
+Commit style
+
+- Use conventional commit prefixes (`feat:`, `fix:`, `test:`, `chore:`)
+
+PR expectations
+
+- Branch off `main`
+- Keep PR focused
+- Require at least 1 approval
+- Delete branch after merge
