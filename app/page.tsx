@@ -1,5 +1,6 @@
 import HomeClient from '@/components/home-client'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getAdminSupabase } from '@/lib/supabase/admin'
 import { mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
 import { getRequestUser } from '@/lib/auth'
 
@@ -32,10 +33,10 @@ export default async function Home() {
           .in('activity_id', activityIds)
       : Promise.resolve({ data: [] }),
     userId
-      ? supabase
+      ? getAdminSupabase()
           .from('bookmarks')
           .select('activity_id')
-        .eq('profile_id', userId)
+          .eq('profile_id', userId)
       : Promise.resolve({ data: [] }),
   ])
 

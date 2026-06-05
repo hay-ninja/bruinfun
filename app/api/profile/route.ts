@@ -55,8 +55,11 @@ export async function GET(req: NextRequest) {
 
     //compute the average rating per activity (same approach as the homepage)
     //gather every activity_id shown across the posted + bookmark tabs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const postedList = (posted ?? []) as any[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookmarkList = (bookmarks ?? []) as any[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completedList = (completed ?? []) as any[]
 
     const allIds = [
