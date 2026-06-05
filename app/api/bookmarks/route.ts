@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
+import { getUserBookmarks, addBookmark, removeBookmark } from '@/lib/db-endpoints/bookmarks'
 
 //get all bookmarked activity IDs for the current user
 export async function GET(req: NextRequest) {
@@ -8,16 +9,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
-    const { data, error } = await auth.db
-        .from('bookmarks')
-        .select('activity_id')
-        .eq('profile_id', auth.user.id)
+    const { data, error } = await getUserBookmarks(auth.user.id)
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ bookmarkedIds: (data ?? []).map((b) => String(b.activity_id)) })
+    return NextResponse.json({ bookmarkedIds: data })
 }
 
 //save an activity to bookmarks
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest) {
     if (auth.user === null) {
         return NextResponse.json({ error: auth.error }, { status: 401 })
     }
-    const { user } = auth
 
     const body = await req.json()
     const { activity_id } = body
@@ -36,11 +33,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'activity_id is required' }, { status: 400 })
     }
 
-    const { data, error } = await auth.db
-        .from('bookmarks')
-        .insert({ profile_id: user.id, activity_id })
-        .select()
-        .single()
+    const { data, error } = await addBookmark(auth.user.id, activity_id)
 
     if (error) {
         //already bookmarked (unique constraint)
@@ -60,7 +53,6 @@ export async function DELETE(req: NextRequest) {
     if (auth.user === null) {
         return NextResponse.json({ error: auth.error }, { status: 401 })
     }
-    const { user } = auth
 
     const body = await req.json()
     const { activity_id } = body
@@ -70,11 +62,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     //delete matching row for this user + activity
-    const { error } = await auth.db
-        .from('bookmarks')
-        .delete()
-        .eq('profile_id', user.id)
-        .eq('activity_id', activity_id)
+    const { error } = await removeBookmark(auth.user.id, activity_id)
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
