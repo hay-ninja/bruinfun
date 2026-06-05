@@ -2,6 +2,7 @@ import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
 
+// manual auth constants + token ttl
 export const AUTH_COOKIE_NAME = 'bf_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
 
@@ -19,6 +20,7 @@ type SessionPayload = {
 }
 
 function getAuthSecret() {
+  // dev fallback only; set AUTH_SECRET in real envs
   return process.env.AUTH_SECRET || 'dev-only-auth-secret-change-me'
 }
 
@@ -48,12 +50,14 @@ function parseCookieValue(cookieHeader: string | null, name: string) {
   return null
 }
 
+// scrypt hash => salt:hash
 export function hashPassword(password: string) {
   const salt = randomBytes(16).toString('hex')
   const hash = scryptSync(password, salt, 64).toString('hex')
   return `${salt}:${hash}`
 }
 
+// verify password against stored salt:hash
 export function verifyPassword(password: string, storedHash: string) {
   const [salt, hashHex] = storedHash.split(':')
   if (!salt || !hashHex) return false
@@ -65,6 +69,7 @@ export function verifyPassword(password: string, storedHash: string) {
   return timingSafeEqual(expected, computed)
 }
 
+// make signed session token payload.signature
 export function createSessionToken(user: SessionUser) {
   const payload: SessionPayload = {
     sub: user.id,
@@ -78,6 +83,7 @@ export function createSessionToken(user: SessionUser) {
   return `${payloadPart}.${signature}`
 }
 
+// verify signature + exp, then map to SessionUser
 export function verifySessionToken(token: string): SessionUser | null {
   const [payloadPart, signature] = token.split('.')
   if (!payloadPart || !signature) return null
@@ -103,6 +109,7 @@ export function verifySessionToken(token: string): SessionUser | null {
   }
 }
 
+// prefer bearer, fallback to cookie header
 export function getTokenFromRequest(req?: NextRequest | Request) {
   const bearer = req?.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (bearer) return bearer
@@ -114,6 +121,7 @@ export function getTokenFromRequest(req?: NextRequest | Request) {
   return null
 }
 
+// server-side cookie read helper
 export async function getTokenFromServerCookies() {
   const cookieStore = await cookies()
   return cookieStore.get(AUTH_COOKIE_NAME)?.value ?? null

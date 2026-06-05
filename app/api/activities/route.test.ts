@@ -1,4 +1,4 @@
-// TDD file (test driven development)
+//TDD file (test driven development)
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST, GET } from './route'
 import { NextRequest } from 'next/server'
@@ -42,7 +42,7 @@ beforeEach(() => {
   vi.mocked(getRequestUser).mockResolvedValue({ user: null, error: 'Unauthorized' })
 })
 
-// ── TESITNG FOR POST ──────────────────────────────────────────────────────────────────────
+//── TESITNG FOR POST ──────────────────────────────────────────────────────────────────────
 
 describe('POST /api/activities', () => {
   it('returns 401 when no token provided', async () => {
@@ -144,7 +144,7 @@ describe('POST /api/activities', () => {
   })
 })
 
-// ── TESTING FOR GET ───────────────────────────────────────────────────────────────────────
+//── TESTING FOR GET ───────────────────────────────────────────────────────────────────────
 
 describe('GET /api/activities', () => {
   function mockQueryResult(data: object[], error: any = null) {
@@ -156,7 +156,7 @@ describe('GET /api/activities', () => {
       or: vi.fn().mockReturnThis(),
       lt: vi.fn().mockResolvedValue({ data, error }),
     }
-    // resolve the chain even when .lt() is never called
+    //resolve the chain even when .lt() is never called
     chain.limit.mockReturnValue({
       ...chain,
       then: (resolve: any) => Promise.resolve({ data, error }).then(resolve),

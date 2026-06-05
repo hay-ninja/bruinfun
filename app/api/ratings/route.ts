@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
+    //auth gate
     const auth = await getRequestUser(req)
     const { user } = auth
     if (!user) {

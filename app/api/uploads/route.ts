@@ -104,11 +104,13 @@ export function __resetUploadRateLimitForTests() {
 }
 
 export async function POST(req: Request) {
+  //1) auth check
   const auth = await getRequestUser(req);
   if (!auth.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  //2) rate-limit check
   const clientIp = getClientIp(req);
   const rateLimitKey = `${auth.user.id}:${clientIp}`;
   const now = Date.now();

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'location is required'}, {status: 400})
     }
 
-    // insert into supabase
+    //insert into supabase
     const { data, error } = await auth.db
         .from('activities')
         .insert({
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     if (error){
         return NextResponse.json( { error: error.message }, { status: 500 })
     }
-    // return succesful object!
+    //return succesful object!
     return NextResponse.json(data, { status: 201 })
 }
 
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     const category = searchParams.get('category')
     const search = searchParams.get('search')
-    const cursor = searchParams.get('cursor') // not pages, cursor = ID of last loaded activity to support infinite scrolling like pinterest :D
+    const cursor = searchParams.get('cursor') //not pages, cursor = ID of last loaded activity to support infinite scrolling like pinterest :D
 
     let query = supabase
     .from('activities')

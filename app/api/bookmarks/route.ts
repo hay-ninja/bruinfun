@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 
-// get all bookmarked activity IDs for the current user
+//get all bookmarked activity IDs for the current user
 export async function GET(req: NextRequest) {
     const auth = await getRequestUser(req)
     if (auth.user === null) {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ bookmarkedIds: (data ?? []).map((b) => String(b.activity_id)) })
 }
 
-// save an activity to bookmarks
+//save an activity to bookmarks
 export async function POST(req: NextRequest) {
 
     const auth = await getRequestUser(req)
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         .single()
 
     if (error) {
-        // already bookmarked (unique constraint)
+        //already bookmarked (unique constraint)
         if (error.code === '23505') {
             return NextResponse.json({ error: 'already bookmarked' }, { status: 409 })
         }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: 201 })
 }
 
-// remove a bookmark
+//remove a bookmark
 export async function DELETE(req: NextRequest) {
 
     const auth = await getRequestUser(req)
@@ -69,7 +69,7 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: 'activity_id is required' }, { status: 400 })
     }
 
-    // delete matching row for this user + activity
+    //delete matching row for this user + activity
     const { error } = await auth.db
         .from('bookmarks')
         .delete()
