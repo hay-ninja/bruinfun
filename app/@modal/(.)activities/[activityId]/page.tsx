@@ -79,6 +79,7 @@ export default async function ActivityModalPage({ params }: PageProps) {
       commentsError={Boolean(commentsError)}
       attendeeCount={attendeeCount}
       isBookmarked={Boolean(bookmarkData)}
+      isLoggedIn={Boolean(user)}
     />
   )
 }
