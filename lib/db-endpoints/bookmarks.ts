@@ -28,6 +28,22 @@ export async function addBookmark(
   return { data, error }
 }
 
+// check if a single activity is bookmarked by a user
+export async function isActivityBookmarked(
+  userId: string,
+  activityId: string
+): Promise<boolean> {
+  const db = getAdminSupabase()
+  const { data } = await db
+    .from('bookmarks')
+    .select('activity_id')
+    .eq('profile_id', userId)
+    .eq('activity_id', activityId)
+    .maybeSingle()
+
+  return !!data
+}
+
 // delete a bookmark row
 export async function removeBookmark(
   userId: string,

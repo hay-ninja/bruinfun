@@ -100,6 +100,18 @@ export async function createActivity(
   return { data, error }
 }
 
+// fetch all rating rows for a single activity (used for attendee count + avg in modal)
+export async function getActivityRatings(
+  activityId: string
+): Promise<{ rating: number }[]> {
+  const db = getAdminSupabase()
+  const { data } = await db
+    .from('ratings')
+    .select('rating')
+    .eq('activity_id', activityId)
+  return (data ?? []) as { rating: number }[]
+}
+
 // fetch a single activity with its comments + avg rating
 export async function getActivityById(
   activityId: string,
