@@ -2,9 +2,9 @@ import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CompleteActivityButton from '@/components/CompleteActivityButton'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
 import ActivityCommentsSection from '@/components/activity/activity-comments-section'
 import { getRequestUser } from '@/lib/auth'
+import { getActivityById } from '@/lib/db-endpoints/activities'
 
 type PageProps = {
   params: Promise<{ activityId: string }>
@@ -43,7 +43,6 @@ export function normalizeActivityComments(comments: ActivityComment[] | null | u
 
 export default async function ActivityDetailsPage({ params }: PageProps) {
   const { activityId } = await params
-  const supabase = await createServerSupabaseClient()
   const auth = await getRequestUser()
   const user = auth.user
 
@@ -61,42 +60,15 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
     )
   }
 
-  const [
-    { data: activity, error },
-    { data: comments, error: commentsError },
-    { data: avgResult },
-  ] = await Promise.all([
-    supabase
-      .from('activities')
-      .select('activity_id, title, description, category, location, event_date, image_url, created_at')
-      .eq('activity_id', validId)
-      .single(),
-    supabase
-      .from('comments')
-      .select('comment_id, comment, created_at, ratings(rating)')
-      .eq('activity_id', validId)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('ratings')
-      .select('rating.avg()')
-      .eq('activity_id', validId)
-      .single(),
-  ])
+  const {
+    activity,
+    comments,
+    averageRating,
+    existingRating,
+    error,
+  } = await getActivityById(validId, user?.id ?? null)
 
   const isLoggedIn = !!user
-
-  let existingRating: number | null = null
-  if (user) {
-    const { data: ratingRow } = await supabase
-      .from('ratings')
-      .select('rating')
-      .eq('activity_id', validId)
-      .eq('profile_id', user.id)
-      .single()
-    existingRating = ratingRow?.rating ?? null
-  }
-
-  const averageRating = avgResult?.avg != null ? Number(Number(avgResult.avg).toFixed(1)) : null
 
   if (error || !activity) {
     return (
@@ -152,7 +124,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
           <ActivityCommentsSection
             activityId={validId}
             initialComments={initialComments}
-            loadError={Boolean(commentsError)}
+            loadError={false}
             isLoggedIn={isLoggedIn}
           />
         </div>
