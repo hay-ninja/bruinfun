@@ -359,19 +359,6 @@ Profile routes
 - `GET /api/profile` (authenticated own profile)
 - `GET /api/users/[username]` (public profile)
 
-## Work Distribution (Git History)
-
-Normalized by email to merge alias names from git config.
-
-Snapshot date: 2026-06-04
-Total commits counted: 126
-
-- Kai (`k.davey4@icloud.com`): 44 commits (34.9%)
-- Haydn (`hayredstonemaster@gmail.com`, aliases `hay-ninja` + `hay_ninja`): 41 commits (32.5%)
-- Riko (`rikopelciw@gmail.com`, aliases `R K` + `rikopelciw`): 26 commits (20.6%)
-- James (`jamesjohnsoniii@jamess-macbook-pro.local`): 9 commits (7.1%)
-- Kaveh (`kavehm013@gmail.com`, aliases `Kaveh` + `Kaveh Malekzadeh`): 6 commits (4.8%)
-
 ## Achievements by Contributor
 
 Kai
