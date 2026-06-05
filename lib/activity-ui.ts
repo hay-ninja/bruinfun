@@ -63,13 +63,10 @@ export function mapDbActivityToCard(activity: DbActivity): Activity | null {
 }
 
 export function splitHomepageActivities(activities: Activity[]) {
-  const byRating = [...activities].sort((left, right) => right.rating - left.rating)
-  const trending = byRating.slice(0, 8)
   const onCampus = activities.filter((activity) => campusLocationPattern.test(activity.location)).slice(0, 8)
   const offCampus = activities.filter((activity) => !campusLocationPattern.test(activity.location)).slice(0, 8)
 
   return {
-    trending: trending.length > 0 ? trending : activities.slice(0, 8),
     offCampus,
     onCampus,
     all: activities,

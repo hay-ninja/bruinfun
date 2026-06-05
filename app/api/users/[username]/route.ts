@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getPublicProfile, getPostedActivitiesForUser, getCompletedActivitiesForUser } from '@/lib/db-endpoints/users'
 
 //GET /api/users/[username] - public profile, no bookmarks tab here
 export async function GET(
@@ -9,34 +9,24 @@ export async function GET(
     const { username } = await params
 
     //find the user by username — column is profile_id not id
-    const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('profile_id, username, first_name, last_name')
-        .eq('username', username)
-        .single()
+    const { data: profile, error: profileError } = await getPublicProfile(username)
 
     if (profileError || !profile) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    //their posted activities
-    const { data: posted, error: postedError } = await supabase
-        .from('activities')
-        .select('activity_id, title, category, image_url, location, created_at')
-        .eq('profile_id', profile.profile_id)
-        .order('created_at', { ascending: false })
+    //their posted + completed activities in parallel
+    const [
+        { data: posted, error: postedError },
+        { data: completed, error: completedError },
+    ] = await Promise.all([
+        getPostedActivitiesForUser(profile.profile_id),
+        getCompletedActivitiesForUser(profile.profile_id),
+    ])
 
     if (postedError) {
         return NextResponse.json({ error: postedError.message }, { status: 500 })
     }
-
-    //their completed activities
-    const { data: completed, error: completedError } = await supabase
-        .from('ratings')
-        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location)')
-        .eq('profile_id', profile.profile_id)
-        .order('created_at', { ascending: false })
-
     if (completedError) {
         return NextResponse.json({ error: completedError.message }, { status: 500 })
     }

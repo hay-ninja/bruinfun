@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
+import { createRating } from '@/lib/db-endpoints/ratings'
 
 export async function POST(req: NextRequest) {
     //auth gate
@@ -20,16 +21,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'rating must be between 1 and 10' }, { status: 400 })
     }
 
-    //insert rating into supabase
-    const { data, error } = await auth.db
-        .from('ratings')
-        .insert({
-            activity_id,
-            profile_id: user.id,
-            rating,
-        })
-        .select()
-        .single()
+    //insert rating via db-endpoint
+    const { data, error } = await createRating(user.id, activity_id, rating)
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })

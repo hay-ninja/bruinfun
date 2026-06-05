@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
+import { createComment } from '@/lib/db-endpoints/comments'
 
 //create comment row tied to rating + activity
 export async function POST(req: NextRequest) {
@@ -24,17 +25,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'comment is required' }, { status: 400 })
     }
 
-    //persist comment
-    const { data, error } = await auth.db
-        .from('comments')
-        .insert({
-            activity_id,
-            rating_id,
-            profile_id: user.id,
-            comment,
-        })
-        .select()
-        .single()
+    //persist comment via db-endpoint
+    const { data, error } = await createComment(user.id, activity_id, rating_id, comment)
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })

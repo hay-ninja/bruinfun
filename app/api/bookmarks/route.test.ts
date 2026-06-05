@@ -10,11 +10,13 @@ vi.mock('@/lib/auth', () => ({
   getRequestUser: mockGetRequestUser,
 }))
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(),
-  },
+vi.mock('@/lib/db-endpoints/bookmarks', () => ({
+  getUserBookmarks: vi.fn(),
+  addBookmark: vi.fn(),
+  removeBookmark: vi.fn(),
 }))
+
+import { addBookmark, removeBookmark } from '@/lib/db-endpoints/bookmarks'
 
 const mockUser = { id: 'user-123' }
 
@@ -27,12 +29,6 @@ function makeRequest(method: 'POST' | 'DELETE', body: object, token?: string) {
     },
     body: JSON.stringify(body),
   })
-}
-
-function makeAuthDb(fromImpl: ReturnType<typeof vi.fn>) {
-  return {
-    from: fromImpl,
-  }
 }
 
 beforeEach(() => vi.clearAllMocks())
@@ -56,7 +52,6 @@ describe('POST /api/bookmarks', () => {
   it('returns 400 when activity_id is missing', async () => {
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(vi.fn()),
       error: null,
     })
 
@@ -65,17 +60,12 @@ describe('POST /api/bookmarks', () => {
   })
 
   it('accepts string activity IDs', async () => {
-    const from = vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { profile_id: mockUser.id, activity_id: 'activity-uuid', created_at: '2026-05-20' }, error: null }),
-        }),
-      }),
-    })
-
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(from),
+      error: null,
+    })
+    vi.mocked(addBookmark).mockResolvedValue({
+      data: { profile_id: mockUser.id, activity_id: 'activity-uuid', created_at: '2026-05-20' },
       error: null,
     })
 
@@ -85,17 +75,12 @@ describe('POST /api/bookmarks', () => {
   })
 
   it('returns 201 on success', async () => {
-    const from = vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { profile_id: mockUser.id, activity_id: 1, created_at: '2026-05-20' }, error: null }),
-        }),
-      }),
-    })
-
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(from),
+      error: null,
+    })
+    vi.mocked(addBookmark).mockResolvedValue({
+      data: { profile_id: mockUser.id, activity_id: 1, created_at: '2026-05-20' },
       error: null,
     })
 
@@ -105,21 +90,13 @@ describe('POST /api/bookmarks', () => {
   })
 
   it('returns 409 when already bookmarked', async () => {
-    const from = vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: null,
-            error: { code: '23505', message: 'duplicate key' },
-          }),
-        }),
-      }),
-    })
-
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(from),
       error: null,
+    })
+    vi.mocked(addBookmark).mockResolvedValue({
+      data: null,
+      error: { code: '23505', message: 'duplicate key' },
     })
 
     const res = await POST(makeRequest('POST', { activity_id: 1 }, 'valid-token'))
@@ -127,18 +104,13 @@ describe('POST /api/bookmarks', () => {
   })
 
   it('returns 500 on db error', async () => {
-    const from = vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: null, error: { code: '500', message: 'db error' } }),
-        }),
-      }),
-    })
-
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(from),
       error: null,
+    })
+    vi.mocked(addBookmark).mockResolvedValue({
+      data: null,
+      error: { code: '500', message: 'db error' },
     })
 
     const res = await POST(makeRequest('POST', { activity_id: 1 }, 'valid-token'))
@@ -165,7 +137,6 @@ describe('DELETE /api/bookmarks', () => {
   it('returns 400 when activity_id is missing', async () => {
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(vi.fn()),
       error: null,
     })
 
@@ -174,19 +145,11 @@ describe('DELETE /api/bookmarks', () => {
   })
 
   it('returns 200 on success', async () => {
-    const from = vi.fn().mockReturnValue({
-      delete: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ error: null }),
-        }),
-      }),
-    })
-
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(from),
       error: null,
     })
+    vi.mocked(removeBookmark).mockResolvedValue({ error: null })
 
     const res = await DELETE(makeRequest('DELETE', { activity_id: 1 }, 'valid-token'))
     expect(res.status).toBe(200)
@@ -194,19 +157,11 @@ describe('DELETE /api/bookmarks', () => {
   })
 
   it('returns 500 on db error', async () => {
-    const from = vi.fn().mockReturnValue({
-      delete: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({ error: { message: 'db error' } }),
-        }),
-      }),
-    })
-
     mockGetRequestUser.mockResolvedValue({
       user: mockUser,
-      db: makeAuthDb(from),
       error: null,
     })
+    vi.mocked(removeBookmark).mockResolvedValue({ error: { message: 'db error' } })
 
     const res = await DELETE(makeRequest('DELETE', { activity_id: 1 }, 'valid-token'))
     expect(res.status).toBe(500)

@@ -9,13 +9,12 @@ import LogActivityModal from '@/components/LogActivityModal'
 import { type Activity } from '@/lib/activity-ui'
 
 type Props = {
-  trending: Activity[]
   offCampus: Activity[]
   onCampus: Activity[]
   all: Activity[]
 }
 
-export default function HomeClient({ trending, offCampus, onCampus, all }: Props) {
+export default function HomeClient({ offCampus, onCampus, all }: Props) {
   const [logModalOpen, setLogModalOpen] = useState(false)
 
   return (
@@ -23,7 +22,6 @@ export default function HomeClient({ trending, offCampus, onCampus, all }: Props
       <Header onLogActivity={() => setLogModalOpen(true)} />
 
       <main className="px-[90px] py-[48px] flex flex-col gap-[48px]">
-        <ActivityRow title="Trending" activities={trending} />
         <ActivityRow title="Off-Campus" activities={offCampus} />
         <ActivityRow title="On-Campus" activities={onCampus} />
         <BrowseAll activities={all} />

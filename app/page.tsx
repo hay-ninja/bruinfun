@@ -1,52 +1,30 @@
 import HomeClient from '@/components/home-client'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getAdminSupabase } from '@/lib/supabase/admin'
-import { mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
+import { mapDbActivityToCard, splitHomepageActivities, type Activity } from '@/lib/activity-ui'
 import { getRequestUser } from '@/lib/auth'
+import { getHomepageActivities, getHomepageRatings } from '@/lib/db-endpoints/activities'
+import { getUserBookmarks } from '@/lib/db-endpoints/bookmarks'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const supabase = await createServerSupabaseClient()
   const auth = await getRequestUser()
   const userId = auth.user?.id ?? null
 
   //fetch the most recent 60 activities for the homepage
-  const [{ data, error }] = await Promise.all([
-    supabase
-      .from('activities')
-      .select('activity_id, title, category, location, image_url, created_at')
-      .order('created_at', { ascending: false })
-      .limit(60),
-  ])
-
-  if (error) console.error('[homepage] activities fetch error:', error.message)
-
-  const activityIds = ((data ?? []) as DbActivity[]).map((a) => a.activity_id)
+  const rawActivities = await getHomepageActivities()
+  const activityIds = rawActivities.map((a) => a.activity_id)
 
   //fetch ratings + bookmarks in parallel — bookmarks only if logged in
-  const [{ data: ratings }, { data: bookmarkData }] = await Promise.all([
-    activityIds.length > 0
-      ? supabase
-          .from('ratings')
-          .select('activity_id, rating')
-          .in('activity_id', activityIds)
-      : Promise.resolve({ data: [] }),
-    userId
-      ? getAdminSupabase()
-          .from('bookmarks')
-          .select('activity_id')
-          .eq('profile_id', userId)
-      : Promise.resolve({ data: [] }),
+  const [ratings, bookmarkIds] = await Promise.all([
+    getHomepageRatings(activityIds),
+    userId ? getUserBookmarks(userId).then((r) => r.data) : Promise.resolve([] as string[]),
   ])
 
-  const bookmarkedIds = new Set(
-    ((bookmarkData ?? []) as { activity_id: string | number }[]).map((b) => String(b.activity_id))
-  )
+  const bookmarkedIds = new Set(bookmarkIds)
 
   //compute avg rating per activity from raw rating rows
   const ratingTotals = new Map<string, { total: number; count: number }>()
-  for (const r of (ratings ?? []) as { activity_id: string | number; rating: number }[]) {
+  for (const r of ratings) {
     const key = String(r.activity_id)
     const current = ratingTotals.get(key) ?? { total: 0, count: 0 }
     current.total += Number(r.rating ?? 0)
@@ -55,7 +33,7 @@ export default async function Home() {
   }
 
   //stamp avg_rating + isBookmarked onto each activity card
-  const activities = ((data ?? []) as DbActivity[])
+  const activities = rawActivities
     .map((activity) => {
       const r = ratingTotals.get(String(activity.activity_id))
       return {

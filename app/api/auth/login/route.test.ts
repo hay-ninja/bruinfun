@@ -2,17 +2,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { POST } from './route'
 
 const {
-  from,
+  findCredentialByEmail,
+  findProfileById,
   verifyPassword,
   createSessionToken,
 } = vi.hoisted(() => ({
-  from: vi.fn(),
+  findCredentialByEmail: vi.fn(),
+  findProfileById: vi.fn(),
   verifyPassword: vi.fn(),
   createSessionToken: vi.fn(),
 }))
 
-vi.mock('@/lib/supabase/admin', () => ({
-  getAdminSupabase: vi.fn(() => ({ from })),
+vi.mock('@/lib/db-endpoints/auth', () => ({
+  findCredentialByEmail,
+  findProfileById,
 }))
 
 vi.mock('@/lib/manual-auth', () => ({
@@ -38,28 +41,14 @@ describe('POST /api/auth/login', () => {
   })
 
   it('returns 200 when login succeeds', async () => {
-    const credentialsChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({
-        data: { profile_id: 'u1', password_hash: 'salt:hash' },
-        error: null,
-      }),
-    }
+    findCredentialByEmail.mockResolvedValue({
+      data: { profile_id: 'u1', password_hash: 'salt:hash' },
+      error: null,
+    })
 
-    const profileChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({
-        data: { username: 'bruin_user' },
-        error: null,
-      }),
-    }
-
-    from.mockImplementation((table: string) => {
-      if (table === 'auth_credentials') return credentialsChain
-      if (table === 'profiles') return profileChain
-      throw new Error(`unexpected table: ${table}`)
+    findProfileById.mockResolvedValue({
+      data: { username: 'bruin_user' },
+      error: null,
     })
 
     verifyPassword.mockReturnValue(true)
