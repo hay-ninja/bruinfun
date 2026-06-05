@@ -55,13 +55,17 @@ export async function GET(req: NextRequest) {
 
     //compute the average rating per activity (same approach as the homepage)
     //gather every activity_id shown across the posted + bookmark tabs
-    const postedList = posted ?? []
-    const bookmarkList = bookmarks ?? []
-    const completedList = completed ?? []
+    type PostedRow = { activity_id: string | number }
+    type JoinedRow = { activities?: { activity_id: string | number } | null }
+
+    const postedList = (posted ?? []) as PostedRow[]
+    const bookmarkList = (bookmarks ?? []) as JoinedRow[]
+    const completedList = (completed ?? []) as JoinedRow[]
+
     const allIds = [
-        ...postedList.map((a: any) => a.activity_id),
-        ...bookmarkList.map((b: any) => b.activities?.activity_id).filter(Boolean),
-        ...completedList.map((c: any) => c.activities?.activity_id).filter(Boolean),
+        ...postedList.map((a) => a.activity_id),
+        ...bookmarkList.map((b) => b.activities?.activity_id).filter(Boolean),
+        ...completedList.map((c) => c.activities?.activity_id).filter(Boolean),
     ]
 
     const avgById = new Map<string, number>()
@@ -85,13 +89,13 @@ export async function GET(req: NextRequest) {
     }
 
     //stamp avg_rating onto posted activities
-    const postedWithAvg = postedList.map((a: any) => ({
+    const postedWithAvg = postedList.map((a) => ({
         ...a,
         avg_rating: avgById.get(String(a.activity_id)) ?? 0,
     }))
 
     //stamp avg_rating onto the joined activity inside each bookmark
-    const bookmarksWithAvg = bookmarkList.map((b: any) => ({
+    const bookmarksWithAvg = bookmarkList.map((b) => ({
         ...b,
         activities: b.activities
             ? { ...b.activities, avg_rating: avgById.get(String(b.activities.activity_id)) ?? 0 }
@@ -99,7 +103,7 @@ export async function GET(req: NextRequest) {
     }))
 
     //stamp avg_rating onto the joined activity inside each completed entry
-    const completedWithAvg = completedList.map((c: any) => ({
+    const completedWithAvg = completedList.map((c) => ({
         ...c,
         activities: c.activities
             ? { ...c.activities, avg_rating: avgById.get(String(c.activities.activity_id)) ?? 0 }

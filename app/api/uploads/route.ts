@@ -128,6 +128,7 @@ export async function POST(req: Request) {
     );
   }
 
+  //3) make sure cloudinary is configured
   const cloudinary = getCloudinaryConfig();
   if (!cloudinary) {
     return NextResponse.json(
@@ -136,6 +137,7 @@ export async function POST(req: Request) {
     );
   }
 
+  //4) parse file from form & validate type/size
   const incoming = await req.formData();
   const file = incoming.get("file");
 
@@ -154,6 +156,7 @@ export async function POST(req: Request) {
     );
   }
 
+  //5) sign upload params and forward to cloudinary
   const uploadParams = {
     folder: "bruinfun",
     timestamp: Math.round(Date.now() / 1000),
