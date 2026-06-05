@@ -125,7 +125,76 @@ npm run start
 npm run lint
 npm run test
 npm run test:watch
+npm run test:e2e
+npm run test:e2e:ui
 ```
+
+## E2E Test Setup (Playwright)
+
+Use this once on a new machine, then any teammate can run E2E tests directly.
+
+1. Install project dependencies
+
+```bash
+npm install
+```
+
+2. Install Playwright package if it is missing
+
+```bash
+npm install -D @playwright/test
+```
+
+3. Install browser binaries used by Playwright
+
+```bash
+npx playwright install
+```
+
+4. Choose how to run tests
+
+Option A: run against local dev server (default)
+
+```bash
+npm run test:e2e
+```
+
+This uses `playwright.config.ts` which will auto-start the app at `http://127.0.0.1:3000`.
+
+Option B: run against deployed Vercel URL
+
+```bash
+E2E_BASE_URL=https://your-deployment.vercel.app npm run test:e2e
+```
+
+PowerShell example:
+
+```powershell
+$env:E2E_BASE_URL="https://your-deployment.vercel.app"
+npm run test:e2e
+```
+
+5. Optional interactive runner
+
+```bash
+npm run test:e2e:ui
+```
+
+6. Where tests live
+
+- `e2e/auth-flows.spec.ts`
+
+7. Current E2E coverage
+
+- Login auth contract: browser-origin POST to `/api/auth/login` returns `401` with expected error and exact payload shape
+- Signup auth contract: browser-origin POST to `/api/auth/signup` returns `409` with expected error and exact payload shape
+
+8. Troubleshooting
+
+- If `npm` is not recognized: install Node.js LTS and reopen terminal
+- If browsers are missing: run `npx playwright install`
+- If port `3000` is busy: stop the existing process or set `E2E_BASE_URL` to an already running instance
+- If test runs are flaky on CI: run with a single worker and retries enabled in CI env
 
 ## Database Schema (Current)
 
