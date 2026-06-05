@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState, useCallback } from "react";
 import {
-  CheckCircle2,
   ImageIcon,
   Loader2,
   Search,
@@ -187,7 +186,8 @@ export default function LogActivityModal({
   }, [onClose])
 
   useEffect(() => {
-    setShow(true)
+    // setTimeout defers the state update out of the effect body to avoid cascading renders
+    setTimeout(() => setShow(true), 0)
     document.body.style.overflow = 'hidden'
 
     const onKey = (e: KeyboardEvent) => {
