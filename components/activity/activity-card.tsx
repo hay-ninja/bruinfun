@@ -1,5 +1,6 @@
 // individual card! thanks kai for design so clutch
 import { MapPin, Users, Utensils, Tag, Zap, Calendar } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import BookmarkButton from '@/components/BookmarkButton'
 import { categoryLabel, type ActivityCategory } from '@/lib/activity-ui'
@@ -73,7 +74,7 @@ export default function ActivityCard({
       {/* photo with badge + bookmark overlaid */}
       <div className="relative h-[163px] overflow-hidden">
         {imageUrl ? (
-          <img src={imageUrl} alt={title} width={266} height={163} className="w-full h-full object-cover" />
+          <Image src={imageUrl} alt={title} width={266} height={163} className="w-full h-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[#dff3fb] px-6 text-center font-[family-name:var(--font-nunito)] text-[18px] font-semibold text-[#1f93cd]">
             {title}
