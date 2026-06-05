@@ -1,47 +1,24 @@
-import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
-import type { NextRequest } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { NextRequest } from 'next/server'
+import { getAdminSupabase } from '@/lib/supabase/admin'
+import { getTokenFromRequest, getTokenFromServerCookies, verifySessionToken, type SessionUser } from '@/lib/manual-auth'
 
 type AuthResult =
-  | { user: User; db: SupabaseClient; error: null }
-  | { user: null; error: string };
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  | { user: SessionUser; db: SupabaseClient; error: null }
+  | { user: null; error: string }
 
 export async function getRequestUser(req?: NextRequest | Request): Promise<AuthResult> {
-  const token = req?.headers.get("authorization")?.replace("Bearer ", "");
+  const token = getTokenFromRequest(req) || (!req ? await getTokenFromServerCookies() : null)
 
-  if (token) {
-    const db = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    });
-
-    const {
-      data: { user },
-      error,
-    } = await db.auth.getUser(token);
-
-    if (error || !user) {
-      return { user: null, error: "Unauthorized" };
-    }
-
-    return { user, db, error: null };
+  if (!token) {
+    return { user: null, error: 'Unauthorized' }
   }
 
-  const db = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error,
-  } = await db.auth.getUser();
+  const user = verifySessionToken(token)
 
-  if (error || !user) {
-    return { user: null, error: "Unauthorized" };
+  if (!user) {
+    return { user: null, error: 'Unauthorized' }
   }
 
-  return { user, db, error: null };
+  return { user, db: getAdminSupabase(), error: null }
 }

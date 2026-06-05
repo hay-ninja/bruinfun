@@ -1,61 +1,82 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { POST } from "./route";
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { POST } from './route'
 
-const { signInWithPassword, createServerSupabaseClient } = vi.hoisted(() => {
-  const signInWithPassword = vi.fn();
-  return {
-    signInWithPassword,
-    createServerSupabaseClient: vi.fn(async () => ({
-      auth: {
-        signInWithPassword,
-      },
-    })),
-  };
-});
+const {
+  from,
+  verifyPassword,
+  createSessionToken,
+} = vi.hoisted(() => ({
+  from: vi.fn(),
+  verifyPassword: vi.fn(),
+  createSessionToken: vi.fn(),
+}))
 
-vi.mock("@/lib/supabase/server", () => ({
-  createServerSupabaseClient,
-}));
+vi.mock('@/lib/supabase/admin', () => ({
+  getAdminSupabase: vi.fn(() => ({ from })),
+}))
+
+vi.mock('@/lib/manual-auth', () => ({
+  verifyPassword,
+  createSessionToken,
+  AUTH_COOKIE_NAME: 'bf_session',
+}))
 
 beforeEach(() => {
-  vi.clearAllMocks();
-});
+  vi.clearAllMocks()
+})
 
-describe("POST /api/auth/login", () => {
-  it("returns 400 when email/password are missing", async () => {
-    const req = new Request("http://localhost/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "test@example.com" }),
-    });
+describe('POST /api/auth/login', () => {
+  it('returns 400 when email/password are missing', async () => {
+    const req = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'test@example.com' }),
+    })
 
-    const res = await POST(req);
-    expect(res.status).toBe(400);
-  });
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+  })
 
-  it("returns 200 when login succeeds", async () => {
-    signInWithPassword.mockResolvedValue({
-      data: {
-        user: { id: "u1" },
-        session: { access_token: "token" },
-      },
-      error: null,
-    });
-
-    const req = new Request("http://localhost/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: "test@example.com",
-        password: "Password123!",
+  it('returns 200 when login succeeds', async () => {
+    const credentialsChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { profile_id: 'u1', password_hash: 'salt:hash' },
+        error: null,
       }),
-    });
+    }
 
-    const res = await POST(req);
-    expect(res.status).toBe(200);
-    expect(signInWithPassword).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "Password123!",
-    });
-  });
-});
+    const profileChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: { username: 'bruin_user' },
+        error: null,
+      }),
+    }
+
+    from.mockImplementation((table: string) => {
+      if (table === 'auth_credentials') return credentialsChain
+      if (table === 'profiles') return profileChain
+      throw new Error(`unexpected table: ${table}`)
+    })
+
+    verifyPassword.mockReturnValue(true)
+    createSessionToken.mockReturnValue('session-token')
+
+    const req = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'test@example.com',
+        password: 'Password123!',
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    expect(verifyPassword).toHaveBeenCalledWith('Password123!', 'salt:hash')
+    expect(createSessionToken).toHaveBeenCalledOnce()
+  })
+})
