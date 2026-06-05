@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { getRequestUser } from '@/lib/auth'
+import { createActivity, searchActivities } from '@/lib/db-endpoints/activities'
 
 const VALID_CATEGORIES = ['sports', 'food', 'arts', 'nightlife', 'outdoors']
 
@@ -31,20 +31,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'location is required'}, {status: 400})
     }
 
-    //insert into supabase
-    const { data, error } = await auth.db
-        .from('activities')
-        .insert({
-            title,
-            description,
-            category,
-            location,
-            event_date: event_date || null,
-            image_url: image_url || null,
-            profile_id: user.id,
-        })
-        .select()
-        .single()
+    //insert via db-endpoint
+    const { data, error } = await createActivity(user.id, {
+        title,
+        description,
+        category,
+        location,
+        event_date: event_date || null,
+        image_url: image_url || null,
+    })
 
     if (error){
         return NextResponse.json( { error: error.message }, { status: 500 })
@@ -60,35 +55,11 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search')
     const cursor = searchParams.get('cursor') //not pages, cursor = ID of last loaded activity to support infinite scrolling like pinterest :D
 
-    let query = supabase
-    .from('activities')
-    .select('*')
-    .order('created_at', {ascending: false})
-    .limit(25)
-
-    if (category) {
-        query = query.eq('category', category)
-    }
-
-    if (search) {
-        const safeSearch = search.replace(/[%,()]/g, '').trim()
-        if (safeSearch) {
-            query = query.or(`title.ilike.%${safeSearch}%,location.ilike.%${safeSearch}%`)
-        }
-    }
-
-    if (cursor) {
-        query = query.lt('activity_id', cursor)
-    }
-
-    const { data, error } = await query
+    const { data, nextCursor, error } = await searchActivities(category, search, cursor)
 
     if (error) {
         return NextResponse.json({ error: error.message }, {status: 500})
     }
 
-    return NextResponse.json({
-        data,
-        nextCursor: data.length === 25 ? data[data.length - 1].activity_id : null
-    })
+    return NextResponse.json({ data, nextCursor })
 }

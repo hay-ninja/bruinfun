@@ -42,7 +42,7 @@ export async function searchActivities(
   category: string | null,
   search: string | null,
   cursor: string | null
-): Promise<{ data: any[]; nextCursor: any }> {
+): Promise<{ data: any[]; nextCursor: any; error: any }> {
   const db = getAdminSupabase()
   let query = db
     .from('activities')
@@ -67,12 +67,13 @@ export async function searchActivities(
 
   const { data, error } = await query
 
-  if (error) return { data: [], nextCursor: null }
+  if (error) return { data: [], nextCursor: null, error }
 
   const results = data ?? []
   return {
     data: results,
     nextCursor: results.length === 25 ? results[results.length - 1].activity_id : null,
+    error: null,
   }
 }
 
