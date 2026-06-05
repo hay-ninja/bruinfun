@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextResponse } from 'next/server'
+import { AUTH_COOKIE_NAME } from '@/lib/manual-auth'
 
 export async function POST() {
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.auth.signOut();
+  const response = NextResponse.json({ message: 'Logout successful' }, { status: 200 })
+  response.cookies.set(AUTH_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Logout successful" }, { status: 200 });
+  return response
 }

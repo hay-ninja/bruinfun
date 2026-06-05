@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import ActivityDetailOverlay from '@/components/activity/ActivityDetailOverlay'
 import { toValidActivityId, normalizeActivityComments } from '@/app/activities/[activityId]/page'
+import { getRequestUser } from '@/lib/auth'
 
 type PageProps = {
   params: Promise<{ activityId: string }>
@@ -16,11 +17,11 @@ type ActivityComment = {
 export default async function ActivityModalPage({ params }: PageProps) {
   const { activityId } = await params
   const supabase = await createServerSupabaseClient()
+  const auth = await getRequestUser()
+  const user = auth.user
 
   const validId = toValidActivityId(activityId)
   if (!validId) return null
-
-  const { data: { user } } = await supabase.auth.getUser()
 
   const [
     { data: activity, error },

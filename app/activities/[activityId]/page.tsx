@@ -3,6 +3,7 @@ import Footer from '@/components/Footer'
 import CompleteActivityButton from '@/components/CompleteActivityButton'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import ActivityCommentsSection from '@/components/activity/activity-comments-section'
+import { getRequestUser } from '@/lib/auth'
 
 type PageProps = {
   params: Promise<{ activityId: string }>
@@ -33,6 +34,8 @@ export function normalizeActivityComments(comments: ActivityComment[] | null | u
 export default async function ActivityDetailsPage({ params }: PageProps) {
   const { activityId } = await params
   const supabase = await createServerSupabaseClient()
+  const auth = await getRequestUser()
+  const user = auth.user
 
   const validId = toValidActivityId(activityId)
 
@@ -49,12 +52,10 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
   }
 
   const [
-    { data: { user } },
     { data: activity, error },
     { data: comments, error: commentsError },
     { data: avgResult },
   ] = await Promise.all([
-    supabase.auth.getUser(),
     supabase
       .from('activities')
       .select('activity_id, title, description, category, location, event_date, image_url, created_at')
