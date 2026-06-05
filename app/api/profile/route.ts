@@ -46,14 +46,10 @@ export async function GET(req: NextRequest) {
 
     //compute the average rating per activity (same approach as the homepage)
     //gather every activity_id shown across the posted + bookmark tabs
-    const postedList = (posted ?? []) as any[]
-    const bookmarkList = (bookmarks ?? []) as any[]
-    const completedList = (completed ?? []) as any[]
-
     const allIds = [
-        ...postedList.map((a) => a.activity_id),
-        ...bookmarkList.map((b) => b.activities?.activity_id).filter(Boolean),
-        ...completedList.map((c) => c.activities?.activity_id).filter(Boolean),
+        ...posted.map((a) => a.activity_id),
+        ...bookmarks.map((b) => b.activities?.activity_id).filter(Boolean),
+        ...completed.map((c) => c.activities?.activity_id).filter(Boolean),
     ]
 
     const { data: allRatings } = await getRatingsForActivities(allIds)
@@ -72,13 +68,13 @@ export async function GET(req: NextRequest) {
     }
 
     //stamp avg_rating onto posted activities
-    const postedWithAvg = postedList.map((a) => ({
+    const postedWithAvg = posted.map((a) => ({
         ...a,
         avg_rating: avgById.get(String(a.activity_id)) ?? 0,
     }))
 
     //stamp avg_rating onto the joined activity inside each bookmark
-    const bookmarksWithAvg = bookmarkList.map((b) => ({
+    const bookmarksWithAvg = bookmarks.map((b) => ({
         ...b,
         activities: b.activities
             ? { ...b.activities, avg_rating: avgById.get(String(b.activities.activity_id)) ?? 0 }
@@ -86,7 +82,7 @@ export async function GET(req: NextRequest) {
     }))
 
     //stamp avg_rating onto the joined activity inside each completed entry
-    const completedWithAvg = completedList.map((c) => ({
+    const completedWithAvg = completed.map((c) => ({
         ...c,
         activities: c.activities
             ? { ...c.activities, avg_rating: avgById.get(String(c.activities.activity_id)) ?? 0 }
