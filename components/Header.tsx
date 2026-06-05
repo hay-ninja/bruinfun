@@ -70,7 +70,14 @@ export default function Header({ onLogActivity }: HeaderProps) {
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setShowDropdown(true)
+    // if there are results, navigate to the first one
+    if (results.length > 0) {
+      setSearchQuery('')
+      setShowDropdown(false)
+      router.push(`/activities/${results[0].activity_id}`)
+    } else {
+      setShowDropdown(true)
+    }
   }
 
   const shouldShowDropdown = showDropdown && hasMinQuery

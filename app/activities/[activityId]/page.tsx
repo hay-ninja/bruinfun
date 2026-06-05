@@ -149,6 +149,7 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
             activityId={validId}
             initialComments={initialComments}
             loadError={Boolean(commentsError)}
+            isLoggedIn={isLoggedIn}
           />
         </div>
       </main>
