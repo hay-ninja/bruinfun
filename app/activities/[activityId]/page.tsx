@@ -15,10 +15,19 @@ type ActivityComment = {
   ratings: { rating: number } | { rating: number }[] | null
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i // I LOVE REGEX hahahaha this was fun -hay_ninja
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const POSITIVE_INTEGER_PATTERN = /^\d+$/
 
 export function toValidActivityId(activityId: string): string | null {
-  return UUID_PATTERN.test(activityId) ? activityId : null
+  if (UUID_PATTERN.test(activityId)) {
+    return activityId
+  }
+
+  if (POSITIVE_INTEGER_PATTERN.test(activityId) && Number(activityId) > 0) {
+    return activityId
+  }
+
+  return null
 }
 
 export function normalizeActivityComments(comments: ActivityComment[] | null | undefined) {
