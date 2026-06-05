@@ -1,32 +1,37 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from 'next/server'
+import { AUTH_COOKIE_NAME, createSessionToken, verifySessionToken } from '@/lib/manual-auth'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const REFRESH_WINDOW_SECONDS = 60 * 60 * 24 // refresh when less than 1 day remaining
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
-    request,
-  });
+  const response = NextResponse.next({ request })
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
+  if (!token) return response
 
-  await supabase.auth.getUser();
+  const user = verifySessionToken(token)
+  if (!user) return response
 
-  return response;
+  // Re-decode to check how much time is left on the session.
+  // verifySessionToken only returns the user, so we parse the payload directly.
+  try {
+    const [payloadPart] = token.split('.')
+    const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8')) as { exp: number }
+    const secondsRemaining = payload.exp - Math.floor(Date.now() / 1000)
+
+    if (secondsRemaining < REFRESH_WINDOW_SECONDS) {
+      const refreshedToken = createSessionToken(user)
+      response.cookies.set(AUTH_COOKIE_NAME, refreshedToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+      })
+    }
+  } catch {
+    // malformed payload — leave response untouched
+  }
+
+  return response
 }
