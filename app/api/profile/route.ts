@@ -55,12 +55,9 @@ export async function GET(req: NextRequest) {
 
     //compute the average rating per activity (same approach as the homepage)
     //gather every activity_id shown across the posted + bookmark tabs
-    type PostedRow = { activity_id: string | number }
-    type JoinedRow = { activities?: { activity_id: string | number } | null }
-
-    const postedList = (posted ?? []) as PostedRow[]
-    const bookmarkList = (bookmarks ?? []) as JoinedRow[]
-    const completedList = (completed ?? []) as JoinedRow[]
+    const postedList = (posted ?? []) as any[]
+    const bookmarkList = (bookmarks ?? []) as any[]
+    const completedList = (completed ?? []) as any[]
 
     const allIds = [
         ...postedList.map((a) => a.activity_id),
