@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { buildAvgRatings } from '@/lib/activity-ui'
 
 // GET /api/users/[username] - public profile, no bookmarks tab here
 export async function GET(
@@ -30,6 +31,17 @@ export async function GET(
         return NextResponse.json({ error: postedError.message }, { status: 500 })
     }
 
+    const postedIds = (posted ?? []).map((a) => a.activity_id)
+    const { data: postedRatings } = postedIds.length > 0
+        ? await supabase.from('ratings').select('activity_id, rating').in('activity_id', postedIds)
+        : { data: [] }
+
+    const avgRatings = buildAvgRatings((postedRatings ?? []) as { activity_id: string | number; rating: number }[])
+    const postedWithRatings = (posted ?? []).map((a) => ({
+        ...a,
+        avg_rating: avgRatings.get(String(a.activity_id)) ?? 0,
+    }))
+
     // their completed activities
     const { data: completed, error: completedError } = await supabase
         .from('ratings')
@@ -41,5 +53,5 @@ export async function GET(
         return NextResponse.json({ error: completedError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ profile, posted, completed: completed ?? [] })
+    return NextResponse.json({ profile, posted: postedWithRatings, completed: completed ?? [] })
 }

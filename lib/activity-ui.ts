@@ -62,6 +62,24 @@ export function mapDbActivityToCard(activity: DbActivity): Activity | null {
   }
 }
 
+export function buildAvgRatings(
+  ratings: { activity_id: string | number; rating: number }[]
+): Map<string, number> {
+  const totals = new Map<string, { total: number; count: number }>()
+  for (const r of ratings) {
+    const key = String(r.activity_id)
+    const current = totals.get(key) ?? { total: 0, count: 0 }
+    current.total += Number(r.rating ?? 0)
+    current.count += 1
+    totals.set(key, current)
+  }
+  const avgs = new Map<string, number>()
+  for (const [key, { total, count }] of totals) {
+    avgs.set(key, Number((total / count).toFixed(1)))
+  }
+  return avgs
+}
+
 export function splitHomepageActivities(activities: Activity[]) {
   const byRating = [...activities].sort((left, right) => right.rating - left.rating)
   const trending = byRating.slice(0, 8)

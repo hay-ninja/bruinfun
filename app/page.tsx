@@ -1,6 +1,6 @@
 import HomeClient from '@/components/home-client'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
+import { buildAvgRatings, mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,23 +39,13 @@ export default async function Home() {
     ((bookmarkData ?? []) as { activity_id: string | number }[]).map((b) => String(b.activity_id))
   )
 
-  const ratingTotals = new Map<string, { total: number; count: number }>()
-  for (const r of (ratings ?? []) as { activity_id: string | number; rating: number }[]) {
-    const key = String(r.activity_id)
-    const current = ratingTotals.get(key) ?? { total: 0, count: 0 }
-    current.total += Number(r.rating ?? 0)
-    current.count += 1
-    ratingTotals.set(key, current)
-  }
+  const avgRatings = buildAvgRatings((ratings ?? []) as { activity_id: string | number; rating: number }[])
 
   const activities = ((data ?? []) as DbActivity[])
-    .map((activity) => {
-      const r = ratingTotals.get(String(activity.activity_id))
-      return {
-        ...activity,
-        avg_rating: r && r.count > 0 ? Number((r.total / r.count).toFixed(1)) : 0,
-      }
-    })
+    .map((activity) => ({
+      ...activity,
+      avg_rating: avgRatings.get(String(activity.activity_id)) ?? 0,
+    }))
     .map(mapDbActivityToCard)
     .filter((activity): activity is Activity => activity !== null)
     .map((activity) => ({ ...activity, isBookmarked: bookmarkedIds.has(activity.id) }))

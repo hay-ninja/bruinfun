@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
+import { buildAvgRatings } from '@/lib/activity-ui'
 
 // GET /api/profile - returns everything needed for the own profile page
 export async function GET(req: NextRequest) {
@@ -53,5 +54,47 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: bookmarksError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ profile, posted, completed: completed ?? [], bookmarks })
+    // collect all activity IDs across all three tabs for a single ratings fetch
+    const postedIds = (posted ?? []).map((a) => a.activity_id)
+    const completedIds = (completed ?? []).flatMap((e) => {
+        const a = e.activities
+        if (!a) return []
+        return Array.isArray(a) ? a.map((x) => x.activity_id) : [a.activity_id]
+    })
+    const bookmarkIds = (bookmarks ?? []).flatMap((b) => {
+        const a = b.activities
+        if (!a) return []
+        return Array.isArray(a) ? a.map((x) => x.activity_id) : [a.activity_id]
+    })
+    const allIds = [...new Set([...postedIds, ...completedIds, ...bookmarkIds])]
+
+    const { data: ratingsData } = allIds.length > 0
+        ? await db.from('ratings').select('activity_id, rating').in('activity_id', allIds)
+        : { data: [] }
+
+    const avgRatings = buildAvgRatings((ratingsData ?? []) as { activity_id: string | number; rating: number }[])
+    const withAvg = (a: { activity_id: number | string; [key: string]: unknown }) => ({
+        ...a,
+        avg_rating: avgRatings.get(String(a.activity_id)) ?? 0,
+    })
+
+    const postedWithRatings = (posted ?? []).map(withAvg)
+    const completedWithRatings = (completed ?? []).map((e) => ({
+        ...e,
+        activities: e.activities
+            ? Array.isArray(e.activities)
+                ? e.activities.map(withAvg)
+                : withAvg(e.activities)
+            : null,
+    }))
+    const bookmarksWithRatings = (bookmarks ?? []).map((b) => ({
+        ...b,
+        activities: b.activities
+            ? Array.isArray(b.activities)
+                ? b.activities.map(withAvg)
+                : withAvg(b.activities)
+            : null,
+    }))
+
+    return NextResponse.json({ profile, posted: postedWithRatings, completed: completedWithRatings, bookmarks: bookmarksWithRatings })
 }
