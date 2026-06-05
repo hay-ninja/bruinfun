@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+//pipe app requests through session-refresh middleware
 export async function proxy(request: NextRequest) {
   return updateSession(request);
 }

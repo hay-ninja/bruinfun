@@ -10,6 +10,7 @@ export default async function Home() {
   const auth = await getRequestUser()
   const userId = auth.user?.id ?? null
 
+  //fetch the most recent 60 activities for the homepage
   const [{ data, error }] = await Promise.all([
     supabase
       .from('activities')
@@ -22,6 +23,7 @@ export default async function Home() {
 
   const activityIds = ((data ?? []) as DbActivity[]).map((a) => a.activity_id)
 
+  //fetch ratings + bookmarks in parallel — bookmarks only if logged in
   const [{ data: ratings }, { data: bookmarkData }] = await Promise.all([
     activityIds.length > 0
       ? supabase
@@ -41,6 +43,7 @@ export default async function Home() {
     ((bookmarkData ?? []) as { activity_id: string | number }[]).map((b) => String(b.activity_id))
   )
 
+  //compute avg rating per activity from raw rating rows
   const ratingTotals = new Map<string, { total: number; count: number }>()
   for (const r of (ratings ?? []) as { activity_id: string | number; rating: number }[]) {
     const key = String(r.activity_id)
@@ -50,6 +53,7 @@ export default async function Home() {
     ratingTotals.set(key, current)
   }
 
+  //stamp avg_rating + isBookmarked onto each activity card
   const activities = ((data ?? []) as DbActivity[])
     .map((activity) => {
       const r = ratingTotals.get(String(activity.activity_id))

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CompleteActivityButton from '@/components/CompleteActivityButton'
@@ -117,9 +118,11 @@ export default async function ActivityDetailsPage({ params }: PageProps) {
       <main className="px-[90px] py-[48px]">
         <div className="mx-auto max-w-[920px] rounded-[24px] border border-[rgba(192,199,209,0.6)] bg-[rgba(255,255,255,0.7)] p-6 shadow-[0px_1.68px_16.78px_-1px_rgba(0,0,0,0.12)]">
           {activity.image_url ? (
-            <img
+            <Image
               src={activity.image_url}
               alt={activity.title}
+              width={920}
+              height={360}
               className="mb-6 h-[360px] w-full rounded-[16px] object-cover"
             />
           ) : null}

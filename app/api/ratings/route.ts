@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
+    //auth gate
     const auth = await getRequestUser(req)
     const { user } = auth
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    //parse body & validate
     const body = await req.json()
     const { activity_id, rating } = body
 
@@ -18,6 +20,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'rating must be between 1 and 10' }, { status: 400 })
     }
 
+    //insert rating into supabase
     const { data, error } = await auth.db
         .from('ratings')
         .insert({

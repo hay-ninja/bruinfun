@@ -37,7 +37,7 @@ function makeAuthDb(fromImpl: ReturnType<typeof vi.fn>) {
 
 beforeEach(() => vi.clearAllMocks())
 
-// ── POST ──────────────────────────────────────────────────────────────────────
+//── POST ──────────────────────────────────────────────────────────────────────
 
 describe('POST /api/bookmarks', () => {
   it('returns 401 with no token', async () => {
@@ -146,7 +146,7 @@ describe('POST /api/bookmarks', () => {
   })
 })
 
-// ── DELETE ────────────────────────────────────────────────────────────────────
+//── DELETE ────────────────────────────────────────────────────────────────────
 
 describe('DELETE /api/bookmarks', () => {
   it('returns 401 with no token', async () => {

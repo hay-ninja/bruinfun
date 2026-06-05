@@ -7,7 +7,9 @@ type LoginBody = {
   password?: string
 }
 
+//login flow: check creds, mint cookie, return user blob
 export async function POST(req: Request) {
+  //grab payload + fast required-field check
   const body = (await req.json()) as LoginBody
   const { email, password } = body
 
@@ -21,6 +23,7 @@ export async function POST(req: Request) {
   const normalizedEmail = email.trim().toLowerCase()
   const adminSupabase = getAdminSupabase()
 
+  //lookup credential by normalized email
   const { data: credential, error } = await adminSupabase
     .from('auth_credentials')
     .select('profile_id, password_hash')
@@ -31,12 +34,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
   }
 
+  //wrong pass? bail w/ same 401 msg
   const isValidPassword = verifyPassword(password, credential.password_hash)
 
   if (!isValidPassword) {
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
   }
 
+  //pull username so client has it right away
   const { data: profile, error: profileError } = await adminSupabase
     .from('profiles')
     .select('username')
@@ -47,6 +52,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: profileError.message }, { status: 500 })
   }
 
+  //sign session token + set cookie
   const token = createSessionToken({
     id: credential.profile_id,
     email: normalizedEmail,
