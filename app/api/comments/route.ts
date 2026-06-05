@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 
+//create comment row tied to rating + activity
 export async function POST(req: NextRequest) {
+    // auth gate
     const auth = await getRequestUser(req)
     const { user } = auth
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    //payload + input checks
     const body = await req.json()
     const { activity_id, rating_id, comment } = body
 
@@ -21,6 +24,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'comment is required' }, { status: 400 })
     }
 
+    //persist comment
     const { data, error } = await auth.db
         .from('comments')
         .insert({

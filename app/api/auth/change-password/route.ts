@@ -7,12 +7,15 @@ type ChangePasswordBody = {
   new_password?: string
 }
 
+//change pass flow for signed-in user
 export async function POST(req: Request) {
+  //need a real signed-in user first
   const auth = await getRequestUser(req)
   if (auth.user === null) {
     return NextResponse.json({ error: auth.error }, { status: 401 })
   }
 
+  //read body + basic guardrails
   const body = (await req.json()) as ChangePasswordBody
   const { current_password, new_password } = body
 
@@ -30,6 +33,7 @@ export async function POST(req: Request) {
     )
   }
 
+  //fetch current hash from auth_credentials
   const { data: credential, error: credentialError } = await auth.db
     .from('auth_credentials')
     .select('password_hash')
@@ -40,10 +44,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Credential record not found' }, { status: 404 })
   }
 
+  //old pass mismatch => 401
   if (!verifyPassword(current_password, credential.password_hash)) {
     return NextResponse.json({ error: 'Current password is incorrect' }, { status: 401 })
   }
 
+  //don't allow same old/new password
   if (verifyPassword(new_password, credential.password_hash)) {
     return NextResponse.json(
       { error: 'New password must be different from current password' },
@@ -51,6 +57,7 @@ export async function POST(req: Request) {
     )
   }
 
+  //write newly hashed password
   const { error: updateError } = await auth.db
     .from('auth_credentials')
     .update({ password_hash: hashPassword(new_password) })

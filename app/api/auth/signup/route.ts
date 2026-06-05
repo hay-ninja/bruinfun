@@ -11,7 +11,9 @@ type SignupBody = {
   last_name?: string
 }
 
+//signup flow: create profile+creds, then auto-login cookie
 export async function POST(req: Request) {
+  //read body + required fields gate
   const body = (await req.json()) as SignupBody
   const { email, password, username, first_name, last_name } = body
 
@@ -29,6 +31,7 @@ export async function POST(req: Request) {
   const normalizedUsername = username.trim().toLowerCase()
   const adminSupabase = getAdminSupabase()
 
+  //email already used?
   const { data: emailExisting } = await adminSupabase
     .from('auth_credentials')
     .select('profile_id')
@@ -39,6 +42,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email is already in use' }, { status: 409 })
   }
 
+  //username already taken?
   const { data: usernameExisting } = await adminSupabase
     .from('profiles')
     .select('profile_id')
@@ -49,6 +53,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Username is already taken' }, { status: 409 })
   }
 
+  //step 1: make profile row
   const profileId = randomUUID()
   const passwordHash = hashPassword(password)
 
@@ -65,6 +70,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: profileError.message }, { status: 400 })
   }
 
+  //step 2: add auth_credentials row
   const { error: credentialsError } = await adminSupabase
     .from('auth_credentials')
     .insert({
@@ -74,10 +80,12 @@ export async function POST(req: Request) {
     })
 
   if (credentialsError) {
+    //credentials failed, roll back profile insert
     await adminSupabase.from('profiles').delete().eq('profile_id', profileId)
     return NextResponse.json({ error: credentialsError.message }, { status: 400 })
   }
 
+  //done: sign token + set cookie
   const token = createSessionToken({
     id: profileId,
     email: normalizedEmail,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 
-// GET /api/profile - returns everything needed for the own profile page
+//GET /api/profile - returns everything needed for the own profile page
 export async function GET(req: NextRequest) {
     const auth = await getRequestUser(req)
     if (auth.user === null) {
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     }
     const { user, db } = auth
 
-    // grab profile info — column is profile_id not id
+    //grab profile info — column is profile_id not id
     const { data: profile, error: profileError } = await db
         .from('profiles')
         .select('username, first_name, last_name')
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: profileError.message }, { status: 500 })
     }
 
-    // activities this user posted — user FK is profile_id not user_id
+    //activities this user posted — user FK is profile_id not user_id
     const { data: posted, error: postedError } = await db
         .from('activities')
         .select('activity_id, title, category, image_url, location, created_at')
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: postedError.message }, { status: 500 })
     }
 
-    // activities this user rated, joined with activity details
+    //activities this user rated, joined with activity details
     const { data: completed, error: completedError } = await db
         .from('ratings')
         .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location)')
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: completedError.message }, { status: 500 })
     }
 
-    // bookmarked activities, joined with activity details
+    //bookmarked activities, joined with activity details
     const { data: bookmarks, error: bookmarksError } = await db
         .from('bookmarks')
         .select('activity_id, activities(activity_id, title, category, image_url, location)')
@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: bookmarksError.message }, { status: 500 })
     }
 
-    // compute the average rating per activity (same approach as the homepage)
-    // gather every activity_id shown across the posted + bookmark tabs
+    //compute the average rating per activity (same approach as the homepage)
+    //gather every activity_id shown across the posted + bookmark tabs
     const postedList = posted ?? []
     const bookmarkList = bookmarks ?? []
     const completedList = completed ?? []
@@ -84,13 +84,13 @@ export async function GET(req: NextRequest) {
         }
     }
 
-    // stamp avg_rating onto posted activities
+    //stamp avg_rating onto posted activities
     const postedWithAvg = postedList.map((a: any) => ({
         ...a,
         avg_rating: avgById.get(String(a.activity_id)) ?? 0,
     }))
 
-    // stamp avg_rating onto the joined activity inside each bookmark
+    //stamp avg_rating onto the joined activity inside each bookmark
     const bookmarksWithAvg = bookmarkList.map((b: any) => ({
         ...b,
         activities: b.activities
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
             : b.activities,
     }))
 
-    // stamp avg_rating onto the joined activity inside each completed entry
+    //stamp avg_rating onto the joined activity inside each completed entry
     const completedWithAvg = completedList.map((c: any) => ({
         ...c,
         activities: c.activities
