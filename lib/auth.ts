@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { NextRequest } from 'next/server'
-import { adminSupabase } from '@/lib/supabase/admin'
+import { getAdminSupabase } from '@/lib/supabase/admin'
 import { getTokenFromRequest, getTokenFromServerCookies, verifySessionToken, type SessionUser } from '@/lib/manual-auth'
 
 type AuthResult =
@@ -20,5 +20,5 @@ export async function getRequestUser(req?: NextRequest | Request): Promise<AuthR
     return { user: null, error: 'Unauthorized' }
   }
 
-  return { user, db: adminSupabase, error: null }
+  return { user, db: getAdminSupabase(), error: null }
 }

@@ -16,7 +16,7 @@ const {
 vi.mock('crypto', () => ({ randomUUID }))
 
 vi.mock('@/lib/supabase/admin', () => ({
-  adminSupabase: { from },
+  getAdminSupabase: vi.fn(() => ({ from })),
 }))
 
 vi.mock('@/lib/manual-auth', () => ({
