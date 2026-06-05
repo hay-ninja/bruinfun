@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
-import { adminSupabase } from '@/lib/supabase/admin'
+import { getAdminSupabase } from '@/lib/supabase/admin'
 import { createSessionToken, hashPassword, AUTH_COOKIE_NAME } from '@/lib/manual-auth'
 
 type SignupBody = {
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
 
   const normalizedEmail = email.trim().toLowerCase()
   const normalizedUsername = username.trim().toLowerCase()
+  const adminSupabase = getAdminSupabase()
 
   const { data: emailExisting } = await adminSupabase
     .from('auth_credentials')

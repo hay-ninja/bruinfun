@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { adminSupabase } from '@/lib/supabase/admin'
+import { getAdminSupabase } from '@/lib/supabase/admin'
 import { createSessionToken, verifyPassword, AUTH_COOKIE_NAME } from '@/lib/manual-auth'
 
 type LoginBody = {
@@ -19,6 +19,7 @@ export async function POST(req: Request) {
   }
 
   const normalizedEmail = email.trim().toLowerCase()
+  const adminSupabase = getAdminSupabase()
 
   const { data: credential, error } = await adminSupabase
     .from('auth_credentials')
