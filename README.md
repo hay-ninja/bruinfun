@@ -8,7 +8,7 @@ A community-driven web platform where UCLA students discover and share fun activ
 - **Language:** TypeScript
 - **Styling:** TailwindCSS v4 + shadcn/ui
 - **Database:** Supabase (PostgreSQL)
-- **Auth:** Supabase Auth
+- **Auth:** Manual cookie-based auth
 - **Photos:** Cloudinary
 - **Hosting:** Vercel
 
@@ -35,9 +35,9 @@ npm install
 
 3. Create your local env file:
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
-Open `.env` and fill in the values — ask a teammate for the Supabase URL/key and Cloudinary cloud name, API key, and API secret.
+Open `.env.local` and fill in the values — ask a teammate for the Supabase URL/keys and Cloudinary cloud name, API key, and API secret.
 
 4. Start the dev server:
 ```bash
@@ -46,7 +46,7 @@ npm run dev
 
 Visit `http://localhost:3000`.
 
-> **Note:** Never commit `.env`. It's gitignored. Your real keys stay local only.
+> **Note:** Never commit `.env.local`. It's gitignored. Your real keys stay local only.
 
 ---
 
