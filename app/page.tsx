@@ -1,19 +1,21 @@
 import HomeClient from '@/components/home-client'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { mapDbActivityToCard, splitHomepageActivities, type Activity, type DbActivity } from '@/lib/activity-ui'
+import { getRequestUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const supabase = await createServerSupabaseClient()
+  const auth = await getRequestUser()
+  const userId = auth.user?.id ?? null
 
-  const [{ data, error }, { data: { user } }] = await Promise.all([
+  const [{ data, error }] = await Promise.all([
     supabase
       .from('activities')
       .select('activity_id, title, category, location, image_url, created_at')
       .order('created_at', { ascending: false })
       .limit(60),
-    supabase.auth.getUser(),
   ])
 
   if (error) console.error('[homepage] activities fetch error:', error.message)
@@ -27,11 +29,11 @@ export default async function Home() {
           .select('activity_id, rating')
           .in('activity_id', activityIds)
       : Promise.resolve({ data: [] }),
-    user
+    userId
       ? supabase
           .from('bookmarks')
           .select('activity_id')
-          .eq('profile_id', user.id)
+        .eq('profile_id', userId)
       : Promise.resolve({ data: [] }),
   ])
 
