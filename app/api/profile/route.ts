@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
+import {
+  getProfileById,
+  getPostedActivities,
+  getCompletedActivities,
+  getBookmarkedActivities,
+  getRatingsForActivities,
+} from '@/lib/db-endpoints/profile'
 
 //GET /api/profile - returns everything needed for the own profile page
 export async function GET(req: NextRequest) {
@@ -7,48 +14,32 @@ export async function GET(req: NextRequest) {
     if (auth.user === null) {
         return NextResponse.json({ error: auth.error }, { status: 401 })
     }
-    const { user, db } = auth
+    const { user } = auth
 
     //grab profile info — column is profile_id not id
-    const { data: profile, error: profileError } = await db
-        .from('profiles')
-        .select('username, first_name, last_name')
-        .eq('profile_id', user.id)
-        .single()
+    const { data: profile, error: profileError } = await getProfileById(user.id)
 
     if (profileError) {
         return NextResponse.json({ error: profileError.message }, { status: 500 })
     }
 
-    //activities this user posted — user FK is profile_id not user_id
-    const { data: posted, error: postedError } = await db
-        .from('activities')
-        .select('activity_id, title, category, image_url, location, created_at')
-        .eq('profile_id', user.id)
-        .order('created_at', { ascending: false })
+    //fetch posted, completed, bookmarked in parallel
+    const [
+        { data: posted, error: postedError },
+        { data: completed, error: completedError },
+        { data: bookmarks, error: bookmarksError },
+    ] = await Promise.all([
+        getPostedActivities(user.id),
+        getCompletedActivities(user.id),
+        getBookmarkedActivities(user.id),
+    ])
 
     if (postedError) {
         return NextResponse.json({ error: postedError.message }, { status: 500 })
     }
-
-    //activities this user rated, joined with activity details
-    const { data: completed, error: completedError } = await db
-        .from('ratings')
-        .select('rating_id, rating, created_at, activities(activity_id, title, category, image_url, location)')
-        .eq('profile_id', user.id)
-        .order('created_at', { ascending: false })
-
     if (completedError) {
         return NextResponse.json({ error: completedError.message }, { status: 500 })
     }
-
-    //bookmarked activities, joined with activity details
-    const { data: bookmarks, error: bookmarksError } = await db
-        .from('bookmarks')
-        .select('activity_id, activities(activity_id, title, category, image_url, location)')
-        .eq('profile_id', user.id)
-        .order('created_at', { ascending: false })
-
     if (bookmarksError) {
         return NextResponse.json({ error: bookmarksError.message }, { status: 500 })
     }
@@ -65,24 +56,19 @@ export async function GET(req: NextRequest) {
         ...completedList.map((c) => c.activities?.activity_id).filter(Boolean),
     ]
 
-    const avgById = new Map<string, number>()
-    if (allIds.length > 0) {
-        const { data: allRatings } = await db
-            .from('ratings')
-            .select('activity_id, rating')
-            .in('activity_id', allIds)
+    const { data: allRatings } = await getRatingsForActivities(allIds)
 
-        const totals = new Map<string, { total: number; count: number }>()
-        for (const r of (allRatings ?? []) as { activity_id: string | number; rating: number }[]) {
-            const key = String(r.activity_id)
-            const cur = totals.get(key) ?? { total: 0, count: 0 }
-            cur.total += Number(r.rating ?? 0)
-            cur.count += 1
-            totals.set(key, cur)
-        }
-        for (const [key, { total, count }] of totals) {
-            avgById.set(key, count > 0 ? Number((total / count).toFixed(1)) : 0)
-        }
+    const avgById = new Map<string, number>()
+    const totals = new Map<string, { total: number; count: number }>()
+    for (const r of allRatings) {
+        const key = String(r.activity_id)
+        const cur = totals.get(key) ?? { total: 0, count: 0 }
+        cur.total += Number(r.rating ?? 0)
+        cur.count += 1
+        totals.set(key, cur)
+    }
+    for (const [key, { total, count }] of totals) {
+        avgById.set(key, count > 0 ? Number((total / count).toFixed(1)) : 0)
     }
 
     //stamp avg_rating onto posted activities
