@@ -1,11 +1,9 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { NextRequest } from 'next/server'
-import { getAdminSupabase } from '@/lib/supabase/admin'
 import { getTokenFromRequest, getTokenFromServerCookies, verifySessionToken, type SessionUser } from '@/lib/manual-auth'
 
 // typed auth helper result used by routes
 type AuthResult =
-  | { user: SessionUser; db: SupabaseClient; error: null }
+  | { user: SessionUser; error: null }
   | { user: null; error: string }
 
 // resolve user from bearer/cookie token
@@ -22,6 +20,5 @@ export async function getRequestUser(req?: NextRequest | Request): Promise<AuthR
     return { user: null, error: 'Unauthorized' }
   }
 
-  // authenticated path gets service-role db client
-  return { user, db: getAdminSupabase(), error: null }
+  return { user, error: null }
 }

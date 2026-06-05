@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getAdminSupabase } from '@/lib/supabase/admin'
 import { createSessionToken, verifyPassword, AUTH_COOKIE_NAME } from '@/lib/manual-auth'
+import { findCredentialByEmail, findProfileById } from '@/lib/db-endpoints/auth'
 
 type LoginBody = {
   email?: string
@@ -21,14 +21,9 @@ export async function POST(req: Request) {
   }
 
   const normalizedEmail = email.trim().toLowerCase()
-  const adminSupabase = getAdminSupabase()
 
   //lookup credential by normalized email
-  const { data: credential, error } = await adminSupabase
-    .from('auth_credentials')
-    .select('profile_id, password_hash')
-    .eq('email', normalizedEmail)
-    .maybeSingle()
+  const { data: credential, error } = await findCredentialByEmail(normalizedEmail)
 
   if (error || !credential) {
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
@@ -42,11 +37,7 @@ export async function POST(req: Request) {
   }
 
   //pull username so client has it right away
-  const { data: profile, error: profileError } = await adminSupabase
-    .from('profiles')
-    .select('username')
-    .eq('profile_id', credential.profile_id)
-    .maybeSingle()
+  const { data: profile, error: profileError } = await findProfileById(credential.profile_id)
 
   if (profileError) {
     return NextResponse.json({ error: profileError.message }, { status: 500 })

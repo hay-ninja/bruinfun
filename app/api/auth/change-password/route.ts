@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getRequestUser } from '@/lib/auth'
 import { hashPassword, verifyPassword } from '@/lib/manual-auth'
+import { findCredentialByProfileId, updatePasswordHash } from '@/lib/db-endpoints/auth'
 
 type ChangePasswordBody = {
   current_password?: string
@@ -34,11 +35,7 @@ export async function POST(req: Request) {
   }
 
   //fetch current hash from auth_credentials
-  const { data: credential, error: credentialError } = await auth.db
-    .from('auth_credentials')
-    .select('password_hash')
-    .eq('profile_id', auth.user.id)
-    .maybeSingle()
+  const { data: credential, error: credentialError } = await findCredentialByProfileId(auth.user.id)
 
   if (credentialError || !credential) {
     return NextResponse.json({ error: 'Credential record not found' }, { status: 404 })
@@ -58,10 +55,7 @@ export async function POST(req: Request) {
   }
 
   //write newly hashed password
-  const { error: updateError } = await auth.db
-    .from('auth_credentials')
-    .update({ password_hash: hashPassword(new_password) })
-    .eq('profile_id', auth.user.id)
+  const { error: updateError } = await updatePasswordHash(auth.user.id, hashPassword(new_password))
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 })
