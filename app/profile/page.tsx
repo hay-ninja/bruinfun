@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ActivityCard from '@/components/activity/activity-card'
+import LogActivityModal from '@/components/LogActivityModal'
 
 type Tab = 'posted' | 'completed' | 'bookmarks'
 
@@ -48,6 +49,7 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [menuOpen, setMenuOpen] = useState(false)
+    const [logModalOpen, setLogModalOpen] = useState(false)
     const [showChangePassword, setShowChangePassword] = useState(false)
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
@@ -146,7 +148,7 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Header />
+            <Header onLogActivity={() => setLogModalOpen(true)} />
             <main className="px-[90px] py-[48px] flex flex-col gap-[32px]">
 
                 {/* name + username */}
@@ -324,6 +326,14 @@ export default function ProfilePage() {
             ) : null}
 
             <Footer />
+
+            {logModalOpen && (
+                <LogActivityModal
+                    initialQuery=""
+                    onClose={() => setLogModalOpen(false)}
+                    onLogged={() => setLogModalOpen(false)}
+                />
+            )}
         </div>
     )
 }
