@@ -25,6 +25,13 @@ export async function POST(req: NextRequest) {
     const { data, error } = await createRating(user.id, activity_id, rating)
 
     if (error) {
+        // Check if it's a unique constraint violation (duplicate rating)
+        if (error.message?.includes('duplicate') || error.code === '23505') {
+            return NextResponse.json(
+                { error: 'You can only leave one rating per activity' },
+                { status: 409 }
+            )
+        }
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 

@@ -29,6 +29,13 @@ export async function POST(req: NextRequest) {
     const { data, error } = await createComment(user.id, activity_id, rating_id, comment)
 
     if (error) {
+        // Check if it's a unique constraint violation (duplicate comment)
+        if (error.message?.includes('duplicate') || error.code === '23505') {
+            return NextResponse.json(
+                { error: 'You can only leave one comment per activity' },
+                { status: 409 }
+            )
+        }
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
